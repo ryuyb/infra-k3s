@@ -1,0 +1,17 @@
+creation_rules:
+  # Ansible vault files
+  - path_regex: ansible/inventory/group_vars/.*/vault\.yml$
+    age: >-
+      age1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    # Uncomment and add your age public key above
+
+  # Kubernetes secrets
+  - path_regex: kubernetes/.*/secrets?\.ya?ml$
+    encrypted_regex: ^(data|stringData)$
+    age: >-
+      age1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+  # Velero credentials
+  - path_regex: kubernetes/infrastructure/velero/credentials\.ya?ml$
+    age: >-
+      age1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

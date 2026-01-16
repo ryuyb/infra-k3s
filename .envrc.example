@@ -1,0 +1,7 @@
+# Cloudflare
+export CLOUDFLARE_API_TOKEN=""
+export CLOUDFLARE_ZONE_ID=""
+
+# AWS/R2 (for Velero backups)
+export AWS_ACCESS_KEY_ID=""
+export AWS_SECRET_ACCESS_KEY=""

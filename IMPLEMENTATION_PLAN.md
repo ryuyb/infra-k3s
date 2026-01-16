@@ -14,10 +14,10 @@ Based on ARCHITECTURE.md, this plan implements the infrastructure in 6 phases wi
 - `.sops.yaml`
 
 **Checklist:**
-- [ ] README.md contains project overview and quick start
-- [ ] .gitignore excludes: `.envrc`, `*.tfstate*`, `*.retry`, `__pycache__`, `.vault_pass`
-- [ ] .envrc.example has all required env vars (CLOUDFLARE_*, AWS_*, ANSIBLE_VAULT_*)
-- [ ] .sops.yaml configured for kubernetes/ path with age encryption
+- [x] README.md contains project overview and quick start
+- [x] .gitignore excludes: `.envrc`, `*.tfstate*`, `*.retry`, `__pycache__`, `.vault_pass`
+- [x] .envrc.example has all required env vars (CLOUDFLARE_*, AWS_*, ANSIBLE_VAULT_*)
+- [x] .sops.yaml configured for kubernetes/ path with age encryption
 
 ---
 
