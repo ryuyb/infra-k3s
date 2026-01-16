@@ -1,7 +1,19 @@
+# Copy to .envrc.local and fill in values
+# Run `direnv allow` after editing
+
+# GitOps
+export GIT_REPO_URL="https://github.com/YOUR_USERNAME/infra-k3s.git"
+
 # Cloudflare
 export CLOUDFLARE_API_TOKEN=""
 export CLOUDFLARE_ZONE_ID=""
 
-# AWS/R2 (for Velero backups)
-export AWS_ACCESS_KEY_ID=""
-export AWS_SECRET_ACCESS_KEY=""
+# ACME / Let's Encrypt
+export ACME_EMAIL="admin@example.com"
+export DOMAIN="example.com"
+
+# Velero / R2 Backup
+export VELERO_BUCKET="k3s-backups"
+export R2_ENDPOINT="https://ACCOUNT_ID.r2.cloudflarestorage.com"
+export R2_ACCESS_KEY_ID=""
+export R2_SECRET_ACCESS_KEY=""

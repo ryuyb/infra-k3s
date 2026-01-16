@@ -1,0 +1,32 @@
+---
+# Daily backup - all namespaces, 30 day retention
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: daily-backup
+  namespace: velero
+spec:
+  schedule: "0 2 * * *"  # 2 AM daily
+  template:
+    ttl: 720h  # 30 days
+    storageLocation: r2-default
+    includedNamespaces:
+      - "*"
+    excludedNamespaces:
+      - kube-system
+      - velero
+---
+# Hourly backup - critical apps only, 7 day retention
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: hourly-critical
+  namespace: velero
+spec:
+  schedule: "0 * * * *"  # Every hour
+  template:
+    ttl: 168h  # 7 days
+    storageLocation: r2-default
+    labelSelector:
+      matchLabels:
+        backup: critical

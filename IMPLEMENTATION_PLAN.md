@@ -270,10 +270,10 @@ kubernetes/infrastructure/
 ```
 
 **Checklist:**
-- [ ] Each app has kustomization.yaml referencing upstream + patches
-- [ ] cert-manager configured for Let's Encrypt
-- [ ] gateway-api with Traefik as Gateway controller
-- [ ] Velero configured for R2 backend
+- [x] Each app has kustomization.yaml referencing upstream + patches
+- [x] cert-manager configured for Let's Encrypt
+- [x] gateway-api with Traefik as Gateway controller
+- [x] Velero configured for R2 backend
 - [ ] Validate: `kustomize build kubernetes/infrastructure/cert-manager/`
 
 ---

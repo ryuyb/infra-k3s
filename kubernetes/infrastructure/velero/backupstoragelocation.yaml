@@ -1,0 +1,14 @@
+---
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: r2-default
+  namespace: velero
+spec:
+  provider: aws
+  objectStorage:
+    bucket: ${VELERO_BUCKET}  # Set via envsubst
+  config:
+    region: auto
+    s3ForcePathStyle: "true"
+    s3Url: ${R2_ENDPOINT}  # e.g., https://<account-id>.r2.cloudflarestorage.com

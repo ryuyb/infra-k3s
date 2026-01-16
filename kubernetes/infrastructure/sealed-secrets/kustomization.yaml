@@ -1,0 +1,10 @@
+---
+# Sealed Secrets for encrypting secrets in Git
+# Note: We use SOPS+age for this project, sealed-secrets is optional
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kube-system
+
+resources:
+  - https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.26.1/controller.yaml

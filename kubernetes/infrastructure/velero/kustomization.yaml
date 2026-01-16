@@ -1,0 +1,19 @@
+---
+# Velero backup to Cloudflare R2
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: velero
+
+resources:
+  - https://raw.githubusercontent.com/vmware-tanzu/velero/v1.13.1/config/crd/v1/bases/velero.io_backupstoragelocations.yaml
+  - https://raw.githubusercontent.com/vmware-tanzu/velero/v1.13.1/config/crd/v1/bases/velero.io_backups.yaml
+  - https://raw.githubusercontent.com/vmware-tanzu/velero/v1.13.1/config/crd/v1/bases/velero.io_restores.yaml
+  - https://raw.githubusercontent.com/vmware-tanzu/velero/v1.13.1/config/crd/v1/bases/velero.io_schedules.yaml
+  - backupstoragelocation.yaml
+  - schedules.yaml
+
+# Note: Velero deployment is typically installed via Helm or velero CLI
+# This kustomization manages the backup configuration only
+# Install velero with: velero install --provider aws --plugins velero/velero-plugin-for-aws:v1.9.0 \
+#   --bucket $VELERO_BUCKET --backup-location-config region=auto,s3ForcePathStyle=true,s3Url=$R2_ENDPOINT
