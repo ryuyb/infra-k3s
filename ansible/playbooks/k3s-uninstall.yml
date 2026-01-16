@@ -1,0 +1,33 @@
+---
+# K3s uninstall playbook: Clean removal of k3s from all nodes
+#
+# Usage:
+#   ansible-playbook playbooks/k3s-uninstall.yml
+#
+# WARNING: This will remove k3s and all cluster data!
+
+- name: Uninstall K3s from worker nodes
+  hosts: k3s_workers
+  become: true
+  tasks:
+    - name: Check if k3s-agent-uninstall script exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/k3s-agent-uninstall.sh
+      register: k3s_agent_uninstall
+
+    - name: Run k3s-agent-uninstall script
+      ansible.builtin.command: /usr/local/bin/k3s-agent-uninstall.sh
+      when: k3s_agent_uninstall.stat.exists
+
+- name: Uninstall K3s from master nodes
+  hosts: k3s_masters
+  become: true
+  tasks:
+    - name: Check if k3s-uninstall script exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/k3s-uninstall.sh
+      register: k3s_uninstall
+
+    - name: Run k3s-uninstall script
+      ansible.builtin.command: /usr/local/bin/k3s-uninstall.sh
+      when: k3s_uninstall.stat.exists

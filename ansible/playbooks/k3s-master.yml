@@ -1,0 +1,11 @@
+---
+# K3s master playbook: Install k3s server on control plane nodes
+#
+# Usage:
+#   ansible-playbook playbooks/k3s-master.yml
+
+- name: Install K3s server on master nodes
+  hosts: k3s_masters
+  become: true
+  roles:
+    - k3s-server

@@ -1,0 +1,12 @@
+---
+# K3s worker playbook: Install k3s agent on worker nodes
+# Requires k3s-master.yml to be run first (needs k3s_token and k3s_server_url)
+#
+# Usage:
+#   ansible-playbook playbooks/k3s-worker.yml
+
+- name: Install K3s agent on worker nodes
+  hosts: k3s_workers
+  become: true
+  roles:
+    - k3s-agent

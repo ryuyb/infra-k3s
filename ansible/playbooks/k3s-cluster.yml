@@ -1,0 +1,18 @@
+---
+# K3s cluster playbook: Full cluster deployment
+# Installs master first, then workers join automatically
+#
+# Usage:
+#   ansible-playbook playbooks/k3s-cluster.yml
+
+- name: Install K3s server on master nodes
+  hosts: k3s_masters
+  become: true
+  roles:
+    - k3s-server
+
+- name: Install K3s agent on worker nodes
+  hosts: k3s_workers
+  become: true
+  roles:
+    - k3s-agent

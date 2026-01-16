@@ -220,11 +220,11 @@ ansible/playbooks/
 ```
 
 **Checklist:**
-- [ ] k3s-master.yml: k3s-prereq → k3s-server on k3s_masters
-- [ ] k3s-worker.yml: k3s-prereq → k3s-agent on k3s_workers
-- [ ] k3s-cluster.yml: Orchestrates master then workers
-- [ ] k3s-uninstall.yml: Clean removal of k3s
-- [ ] Validate: All playbooks pass syntax check
+- [x] k3s-master.yml: k3s-prereq → k3s-server on k3s_masters
+- [x] k3s-worker.yml: k3s-prereq → k3s-agent on k3s_workers
+- [x] k3s-cluster.yml: Orchestrates master then workers
+- [x] k3s-uninstall.yml: Clean removal of k3s
+- [x] Validate: All playbooks pass syntax check
 
 ---
 
