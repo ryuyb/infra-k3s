@@ -1,0 +1,10 @@
+---
+# Root kustomization for apps
+# ArgoCD deploys this to manage all user applications
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources: []
+  # Add your apps here:
+  # - myapp
+  # - another-app

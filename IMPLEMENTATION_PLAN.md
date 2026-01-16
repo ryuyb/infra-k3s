@@ -290,10 +290,10 @@ kubernetes/apps/_template/
 ```
 
 **Checklist:**
-- [ ] Template provides starting point for new apps
-- [ ] Includes common labels and annotations
-- [ ] httproute.yaml shows Gateway API HTTPRoute format
-- [ ] secret.yaml.example shows SOPS encryption format
+- [x] Template provides starting point for new apps
+- [x] Includes common labels and annotations
+- [x] httproute.yaml shows Gateway API HTTPRoute format
+- [x] secret.yaml.example shows SOPS encryption format
 - [ ] Validate: Template is valid Kubernetes YAML
 
 ---
