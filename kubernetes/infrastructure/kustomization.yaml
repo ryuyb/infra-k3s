@@ -10,4 +10,6 @@ resources:
   - gateway-api
   - velero
   - external-dns
+  - prometheus
+  - grafana
   # - sealed-secrets  # Optional: uncomment if using sealed-secrets instead of SOPS
