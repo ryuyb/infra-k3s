@@ -1,0 +1,10 @@
+# Copy to terraform.tfvars and fill in values
+# This file is gitignored
+
+cloudflare_account_id = ""
+cloudflare_zone_id    = ""
+domain                = "example.com"
+cluster_ingress_ip    = "1.2.3.4"
+
+# cloudflare_api_token is set via environment variable:
+# export TF_VAR_cloudflare_api_token="your-token"

@@ -367,22 +367,30 @@ scripts/
 
 ## Phase 5: DNS & Infrastructure (OpenTofu)
 
-### Task 5.1: OpenTofu Base Structure
+### Task 5.1: OpenTofu Modular Structure
 **Files to create:**
 ```
 tofu/
-├── main.tf
-├── variables.tf
-├── outputs.tf
-├── terraform.tfvars.example
-└── backend.tf
+├── README.md
+├── modules/
+│   ├── cloudflare-dns/
+│   ├── cloudflare-r2/
+│   └── authentik/
+└── stacks/
+    └── prod/
+        ├── main.tf
+        ├── variables.tf
+        ├── outputs.tf
+        ├── dns.tf
+        ├── storage.tf
+        └── terraform.tfvars.example
 ```
 
 **Checklist:**
-- [ ] main.tf configures Cloudflare provider
-- [ ] variables.tf defines cloudflare_api_token (sensitive), zone_id
-- [ ] backend.tf configures R2 or local state
-- [ ] terraform.tfvars.example shows required variables
+- [x] Modular structure with reusable modules
+- [x] main.tf configures Cloudflare provider
+- [x] variables.tf defines cloudflare_api_token (sensitive), zone_id, account_id
+- [x] terraform.tfvars.example shows required variables
 - [ ] Validate: `tofu init` succeeds
 
 ---
@@ -397,14 +405,14 @@ tofu/modules/cloudflare-dns/
 ```
 
 **Functionality:**
-- Create/manage DNS A records
+- Create/manage DNS records (A, CNAME, TXT, etc.)
 - Support for proxied and non-proxied records
 - TTL configuration
 
 **Checklist:**
-- [ ] Module accepts domain, subdomain, IP, proxied, TTL
-- [ ] Creates cloudflare_record resources
-- [ ] Outputs record ID and FQDN
+- [x] Module accepts zone_id, records map
+- [x] Creates cloudflare_record resources
+- [x] Outputs record details
 - [ ] Validate: `tofu plan` shows expected resources
 
 ---
@@ -412,7 +420,7 @@ tofu/modules/cloudflare-dns/
 ### Task 5.3: R2 Bucket Module
 **Files to create:**
 ```
-tofu/modules/r2-bucket/
+tofu/modules/cloudflare-r2/
 ├── main.tf
 ├── variables.tf
 └── outputs.tf
@@ -420,29 +428,33 @@ tofu/modules/r2-bucket/
 
 **Functionality:**
 - Create R2 bucket for Velero backups
-- Configure lifecycle rules
+- Configure location
 
 **Checklist:**
-- [ ] Creates R2 bucket with specified name
-- [ ] Configures CORS if needed
-- [ ] Outputs bucket name and endpoint
+- [x] Creates R2 bucket with specified name
+- [x] Outputs bucket name and ID
 - [ ] Validate: Module syntax valid
 
 ---
 
-### Task 5.4: DNS Configuration
+### Task 5.4: Production Stack
 **Files to create:**
 ```
-tofu/dns.tf
+tofu/stacks/prod/
+├── dns.tf
+└── storage.tf
 ```
 
 **Functionality:**
 - Define DNS records for cluster services
 - Wildcard record for ingress
+- R2 bucket for Velero
 
 **Checklist:**
-- [ ] Uses cloudflare-dns module
-- [ ] Creates records for: API server, wildcard ingress
+- [x] Uses cloudflare-dns module
+- [x] Creates wildcard and root DNS records
+- [x] Creates Velero backup bucket
+- [ ] Validate: `tofu plan` shows expected resources
 - [ ] Validate: `tofu plan` shows DNS records
 
 ---

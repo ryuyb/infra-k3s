@@ -6,6 +6,7 @@ export GIT_REPO_URL="https://github.com/YOUR_USERNAME/infra-k3s.git"
 
 # Cloudflare
 export CLOUDFLARE_API_TOKEN=""
+export CLOUDFLARE_ACCOUNT_ID=""
 export CLOUDFLARE_ZONE_ID=""
 
 # ACME / Let's Encrypt
