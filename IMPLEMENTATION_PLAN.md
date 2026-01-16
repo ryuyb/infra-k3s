@@ -237,7 +237,7 @@ kubernetes/
 ├── bootstrap/
 │   ├── namespaces.yaml
 │   └── argocd/
-│       ├── install.yaml
+│       ├── kustomization.yaml
 │       ├── projects/
 │       │   └── infrastructure.yaml
 │       └── apps/
@@ -246,9 +246,9 @@ kubernetes/
 ```
 
 **Checklist:**
-- [ ] namespaces.yaml creates: argocd, cert-manager, ingress-nginx, velero
-- [ ] install.yaml is ArgoCD installation manifest (from official)
-- [ ] App of Apps pattern: infrastructure.yaml and apps.yaml root apps
+- [x] namespaces.yaml creates: argocd, cert-manager, gateway-system, velero
+- [x] kustomization.yaml installs ArgoCD with KSOPS support
+- [x] App of Apps pattern: infrastructure.yaml and apps.yaml root apps
 - [ ] Validate: `kubectl apply --dry-run=client -f kubernetes/bootstrap/`
 
 ---
@@ -259,7 +259,7 @@ kubernetes/
 kubernetes/infrastructure/
 ├── cert-manager/
 │   └── kustomization.yaml
-├── ingress-nginx/
+├── gateway-api/
 │   └── kustomization.yaml
 ├── velero/
 │   └── kustomization.yaml
@@ -272,7 +272,7 @@ kubernetes/infrastructure/
 **Checklist:**
 - [ ] Each app has kustomization.yaml referencing upstream + patches
 - [ ] cert-manager configured for Let's Encrypt
-- [ ] ingress-nginx with appropriate annotations
+- [ ] gateway-api with Traefik as Gateway controller
 - [ ] Velero configured for R2 backend
 - [ ] Validate: `kustomize build kubernetes/infrastructure/cert-manager/`
 
@@ -285,13 +285,14 @@ kubernetes/apps/_template/
 ├── kustomization.yaml
 ├── deployment.yaml
 ├── service.yaml
-├── ingress.yaml
+├── httproute.yaml
 └── secret.yaml.example
 ```
 
 **Checklist:**
 - [ ] Template provides starting point for new apps
 - [ ] Includes common labels and annotations
+- [ ] httproute.yaml shows Gateway API HTTPRoute format
 - [ ] secret.yaml.example shows SOPS encryption format
 - [ ] Validate: Template is valid Kubernetes YAML
 
