@@ -152,10 +152,10 @@ ansible/roles/k3s-prereq/
 - Install container runtime dependencies
 
 **Checklist:**
-- [ ] Swap disabled and removed from fstab
-- [ ] Kernel modules loaded and persisted
-- [ ] sysctl net.bridge.bridge-nf-call-iptables = 1
-- [ ] Validate: `sysctl net.bridge.bridge-nf-call-iptables` returns 1
+- [x] Swap disabled and removed from fstab
+- [x] Kernel modules loaded and persisted
+- [x] sysctl net.bridge.bridge-nf-call-iptables = 1
+- [x] Validate: `sysctl net.bridge.bridge-nf-call-iptables` returns 1
 
 ---
 

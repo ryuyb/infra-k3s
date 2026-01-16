@@ -1,0 +1,11 @@
+---
+# Kernel modules required for K3s/Kubernetes
+k3s_kernel_modules:
+  - br_netfilter  # Bridge netfilter for iptables to process bridged traffic
+  - overlay       # OverlayFS for container image layers
+
+# Sysctl parameters for Kubernetes networking
+k3s_sysctl_params:
+  net.bridge.bridge-nf-call-iptables: 1   # Process bridged IPv4 traffic with iptables
+  net.bridge.bridge-nf-call-ip6tables: 1  # Process bridged IPv6 traffic with ip6tables
+  net.ipv4.ip_forward: 1                  # Enable IP forwarding for pod networking
