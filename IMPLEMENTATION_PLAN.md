@@ -177,11 +177,11 @@ ansible/roles/k3s-server/
 - Setup kubeconfig
 
 **Checklist:**
-- [ ] K3s installed via official script
-- [ ] API server binds to Tailscale IP
-- [ ] k3s token saved to vault or host_vars
-- [ ] kubeconfig accessible at /etc/rancher/k3s/k3s.yaml
-- [ ] Validate: `kubectl get nodes` shows master node Ready
+- [x] K3s installed via official script
+- [x] API server binds to Tailscale IP
+- [x] k3s token saved to vault or host_vars
+- [x] kubeconfig accessible at /etc/rancher/k3s/k3s.yaml
+- [x] Validate: `kubectl get nodes` shows master node Ready
 
 ---
 

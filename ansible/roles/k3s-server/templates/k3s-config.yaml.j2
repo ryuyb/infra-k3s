@@ -1,0 +1,28 @@
+# K3s server configuration
+# https://docs.k3s.io/installation/configuration
+
+# Bind API server to Tailscale IP for secure cross-node communication
+node-ip: {{ tailscale_ip }}
+bind-address: {{ tailscale_ip }}
+
+# Add Tailscale IP to TLS SAN for valid certificate
+tls-san:
+  - {{ tailscale_ip }}
+  - {{ inventory_hostname }}
+{% if k3s_tls_san_extra %}
+{% for san in k3s_tls_san_extra %}
+  - {{ san }}
+{% endfor %}
+{% endif %}
+
+# Use Tailscale interface for flannel CNI
+flannel-iface: {{ k3s_flannel_iface }}
+
+# Disable components we don't need or will replace
+{% if k3s_disable_traefik %}
+disable:
+  - traefik
+{% endif %}
+
+# Write kubeconfig with correct permissions
+write-kubeconfig-mode: "0644"

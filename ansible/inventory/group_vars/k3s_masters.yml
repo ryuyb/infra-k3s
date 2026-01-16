@@ -1,9 +1,3 @@
 ---
 # K3s master node configuration
 k3s_role: server
-
-# API server settings
-k3s_server_args:
-  - "--tls-san={{ tailscale_ip | default(public_ip) }}"
-  - "--node-ip={{ tailscale_ip | default(public_ip) }}"
-  - "--flannel-iface=tailscale0"

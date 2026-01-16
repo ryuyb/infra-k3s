@@ -1,0 +1,12 @@
+---
+# Flannel interface (use Tailscale for cross-cloud networking)
+k3s_flannel_iface: tailscale0
+
+# Disable built-in Traefik (set to false to use K3s bundled Traefik)
+k3s_disable_traefik: true
+
+# Extra TLS SANs for API server certificate
+k3s_tls_san_extra: []
+
+# Fetch kubeconfig to local machine after install
+k3s_fetch_kubeconfig: true
