@@ -1,0 +1,52 @@
+---
+# Velero node-agent installation
+# Node-agent runs as DaemonSet to backup PVCs using file-level backup (Kopia)
+
+- name: Check if velero CLI is installed
+  ansible.builtin.command: which velero
+  register: velero_check
+  changed_when: false
+  failed_when: false
+
+- name: Install velero CLI
+  when: velero_check.rc != 0
+  block:
+    - name: Download velero CLI
+      ansible.builtin.get_url:
+        url: "https://github.com/vmware-tanzu/velero/releases/download/v{{ velero_version }}/velero-v{{ velero_version }}-linux-amd64.tar.gz"
+        dest: /tmp/velero.tar.gz
+        mode: "0644"
+
+    - name: Extract velero CLI
+      ansible.builtin.unarchive:
+        src: /tmp/velero.tar.gz
+        dest: /tmp
+        remote_src: true
+
+    - name: Install velero binary
+      ansible.builtin.copy:
+        src: "/tmp/velero-v{{ velero_version }}-linux-amd64/velero"
+        dest: /usr/local/bin/velero
+        mode: "0755"
+        remote_src: true
+
+    - name: Cleanup temp files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/velero.tar.gz
+        - "/tmp/velero-v{{ velero_version }}-linux-amd64"
+
+- name: Check if node-agent DaemonSet exists
+  ansible.builtin.command: kubectl get daemonset node-agent -n {{ velero_namespace }}
+  register: node_agent_check
+  changed_when: false
+  failed_when: false
+
+- name: Display node-agent status
+  ansible.builtin.debug:
+    msg: "Node-agent DaemonSet {{ 'exists' if node_agent_check.rc == 0 else 'not found - deploy Velero with --use-node-agent flag' }}"
+
+# Note: Node-agent is deployed as part of Velero installation
+# Use: velero install --use-node-agent --uploader-type=kopia ...

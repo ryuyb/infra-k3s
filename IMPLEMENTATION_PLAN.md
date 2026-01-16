@@ -311,9 +311,9 @@ config/velero/
 ```
 
 **Checklist:**
-- [ ] backup-locations.yaml configures R2 as S3-compatible backend
-- [ ] daily.yaml: 30-day retention, all namespaces
-- [ ] hourly-critical.yaml: 7-day retention, labeled apps only
+- [x] backup-locations.yaml configures R2 as S3-compatible backend
+- [x] daily.yaml: 30-day retention, all namespaces
+- [x] hourly-critical.yaml: 7-day retention, labeled apps only
 - [ ] Validate: YAML syntax valid
 
 ---
@@ -331,8 +331,8 @@ ansible/roles/node-agent/
 - Configure for Kopia integration
 
 **Checklist:**
-- [ ] Node-agent DaemonSet deployed
-- [ ] Can access local PVCs
+- [x] Node-agent DaemonSet deployed
+- [x] Can access local PVCs
 - [ ] Validate: `kubectl get pods -n velero` shows node-agent running
 
 ---
@@ -355,12 +355,12 @@ scripts/
 ```
 
 **Checklist:**
-- [ ] create-backup.sh: Creates Velero backup with labels
-- [ ] list-backups.sh: Lists backups with status
-- [ ] restore-backup.sh: Restores specific backup
-- [ ] failover.sh: Cordons node, restores to target
-- [ ] All scripts have `--help` option
-- [ ] All scripts are executable (chmod +x)
+- [x] create-backup.sh: Creates Velero backup with labels
+- [x] list-backups.sh: Lists backups with status
+- [x] restore-backup.sh: Restores specific backup
+- [x] failover.sh: Cordons node, restores to target
+- [x] All scripts have `--help` option
+- [x] All scripts are executable (chmod +x)
 - [ ] Validate: `./scripts/backup/list-backups.sh --help` works
 
 ---

@@ -1,0 +1,10 @@
+---
+# Velero node-agent configuration
+velero_namespace: velero
+velero_version: "1.13.1"
+
+# Node-agent (formerly restic) for PVC backups
+node_agent_enabled: true
+
+# Kopia is the default uploader in Velero 1.13+
+node_agent_uploader: kopia
