@@ -1,0 +1,47 @@
+---
+- name: Check if tailscale is installed
+  ansible.builtin.command: "which tailscale"
+  register: tailscale_existence
+  changed_when: false
+  ignore_errors: true
+
+- name: Install tailscale
+  ansible.builtin.shell: "set -o pipefail && curl -fsSL https://tailscale.com/install.sh | sh"
+  args:
+    executable: /usr/bin/bash
+  become: true
+  changed_when: true
+  when: tailscale_existence.rc != 0
+
+- name: Provision tailscale node
+  ansible.builtin.command: >-
+    tailscale up
+    --netfilter-mode=off
+    --accept-dns=false
+    --timeout=120s
+    --advertise-tags=tag:ansible
+    --auth-key={{ tailscale_authkey }}?ephemeral=false
+  register: tailscale_up_result
+  become: true
+  ignore_errors: true
+  changed_when: tailscale_up_result.rc != 0
+
+- name: Fail on tailscale error
+  ansible.builtin.fail:
+    msg: "Failed to execute tailscale up"
+  when: tailscale_up_result.rc != 0
+
+- name: Get tailscale IPv4 address
+  ansible.builtin.command: "tailscale ip -4"
+  register: tailscale_ipv4_result
+  changed_when: false
+
+- name: Set tailscale_ip fact
+  ansible.builtin.set_fact:
+    tailscale_ip: "{{ tailscale_ipv4_result.stdout }}"
+
+- name: Ensure all hosts are reachable via Tailscale
+  ansible.builtin.command: "ping -c 1 -w 60 {{ item }}"
+  loop: "{{ hostvars | dict2items | selectattr('value.tailscale_ip', 'defined') | map(attribute='value.tailscale_ip') | list }}"
+  changed_when: false
+  when: hostvars | dict2items | selectattr('value.tailscale_ip', 'defined') | list | length > 1

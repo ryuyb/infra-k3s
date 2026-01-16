@@ -1,0 +1,15 @@
+---
+common_packages:
+  - curl
+  - wget
+  - vim
+  - htop
+  - git
+  - jq
+  - unzip
+  - ca-certificates
+  - gnupg
+
+# SSH hardening
+ssh_disable_password_auth: true
+ssh_disable_root_password_login: true

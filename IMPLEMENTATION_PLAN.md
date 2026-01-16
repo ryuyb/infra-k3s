@@ -60,10 +60,10 @@ ansible/roles/common/
 - Gather Tailscale facts for dynamic IP resolution
 
 **Checklist:**
-- [ ] main.yml installs essential packages
-- [ ] gather_facts.yml checks Tailscale installation and sets tailscale_ip fact
-- [ ] Supports both Debian/Ubuntu and RHEL/CentOS families
-- [ ] Validate: `ansible-playbook --syntax-check` passes
+- [x] main.yml installs essential packages
+- [x] gather_facts.yml checks Tailscale installation and sets tailscale_ip fact
+- [x] Supports both Debian/Ubuntu and RHEL/CentOS families
+- [x] Validate: `ansible-playbook --syntax-check` passes
 
 ---
 

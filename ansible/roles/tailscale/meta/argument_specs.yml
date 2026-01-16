@@ -1,0 +1,9 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure Tailscale VPN
+    options:
+      tailscale_authkey:
+        type: str
+        required: true
+        description: Tailscale auth key for node authentication
