@@ -16,6 +16,10 @@ ansible-playbook ansible/playbooks/bootstrap.yml
 # Deploy K3s cluster
 ansible-playbook ansible/playbooks/k3s-cluster.yml
 
+# Deploy ArgoCD and GitOps (after K3s is running)
+# Set DOMAIN environment variable for HTTPRoute
+DOMAIN=yourdomain.com ansible-playbook ansible/playbooks/deploy-argocd.yml
+
 # Setup Velero secrets from environment variables
 ansible-playbook ansible/playbooks/setup-velero-secrets.yml
 
@@ -27,6 +31,9 @@ ansible-playbook ansible/playbooks/maintenance.yml
 
 # Edit encrypted secrets
 ansible-vault edit ansible/inventory/group_vars/all/vault.yml
+
+# One-command cluster initialization (bootstrap + K3s + ArgoCD)
+DOMAIN=yourdomain.com ./scripts/setup/init-cluster.sh --with-argocd
 ```
 
 ### OpenTofu
@@ -87,6 +94,7 @@ kubeseal --cert sealed-secrets-cert.pem --format yaml < secret.yaml > sealedsecr
 bootstrap.yml → common → firewall → tailscale
 k3s-master.yml → k3s-prereq → k3s-server
 k3s-worker.yml → k3s-prereq → k3s-agent
+deploy-argocd.yml → argocd (runs on k3s_masters[0], installs kustomize, clones repo)
 ```
 
 ### Node Groups

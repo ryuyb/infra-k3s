@@ -11,6 +11,8 @@ node-ip: {{ tailscale_ip }}
 # Use Tailscale interface for flannel
 flannel-iface: {{ k3s_flannel_iface }}
 
+flannel-backend: host-gw
+
 # Node labels for scheduling
 node-label:
 {% for label in k3s_node_labels %}

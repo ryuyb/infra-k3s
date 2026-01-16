@@ -1,0 +1,16 @@
+---
+# Deploy ArgoCD and App of Apps
+# This playbook deploys ArgoCD to the K3s cluster and sets up GitOps
+#
+# Prerequisites:
+#   - K3s cluster is running
+#   - First master node is accessible
+#
+# Usage:
+#   DOMAIN=yourdomain.com ansible-playbook ansible/playbooks/deploy-argocd.yml
+
+- name: Deploy ArgoCD to K3s cluster
+  hosts: k3s_masters[0]
+  become: true
+  roles:
+    - argocd

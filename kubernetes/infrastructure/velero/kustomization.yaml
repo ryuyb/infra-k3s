@@ -6,6 +6,7 @@ kind: Kustomization
 namespace: velero
 
 resources:
+  - namespace.yaml
   - https://raw.githubusercontent.com/vmware-tanzu/velero/v1.13.1/config/crd/v1/bases/velero.io_backupstoragelocations.yaml
   - https://raw.githubusercontent.com/vmware-tanzu/velero/v1.13.1/config/crd/v1/bases/velero.io_backups.yaml
   - https://raw.githubusercontent.com/vmware-tanzu/velero/v1.13.1/config/crd/v1/bases/velero.io_restores.yaml

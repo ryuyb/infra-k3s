@@ -1,0 +1,118 @@
+---
+# ArgoCD deployment tasks
+
+- name: Install required packages
+  apt:
+    name:
+      - curl
+      - git
+    state: present
+    update_cache: yes
+
+- name: Check if kustomize is installed
+  stat:
+    path: /usr/local/bin/kustomize
+  register: kustomize_binary
+
+- name: Install kustomize
+  block:
+    - name: Download kustomize
+      get_url:
+        url: "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv{{ kustomize_version }}/kustomize_v{{ kustomize_version }}_linux_amd64.tar.gz"
+        dest: /tmp/kustomize.tar.gz
+        mode: '0644'
+
+    - name: Extract kustomize
+      unarchive:
+        src: /tmp/kustomize.tar.gz
+        dest: /usr/local/bin
+        remote_src: yes
+        mode: '0755'
+
+    - name: Clean up kustomize archive
+      file:
+        path: /tmp/kustomize.tar.gz
+        state: absent
+  when: not kustomize_binary.stat.exists
+
+- name: Create temporary directory for manifests
+  tempfile:
+    state: directory
+    suffix: argocd
+  register: temp_dir
+
+- name: Clone repository to get manifests
+  git:
+    repo: "{{ git_repo_url }}"
+    dest: "{{ temp_dir.path }}/repo"
+    version: HEAD
+    depth: 1
+
+- name: Create argocd namespace
+  shell: kubectl create namespace {{ argocd_namespace }} --dry-run=client -o yaml | kubectl apply -f -
+  changed_when: false
+
+- name: Build ArgoCD manifests with kustomize
+  shell: |
+    cd {{ temp_dir.path }}/repo/kubernetes/bootstrap/argocd
+    kustomize build .
+  register: argocd_manifests_raw
+  changed_when: false
+
+- name: Replace placeholders in manifests
+  set_fact:
+    argocd_manifests: "{{ argocd_manifests_raw.stdout | regex_replace('\\$\\{GIT_REPO_URL\\}', git_repo_url) | regex_replace('\\$\\{DOMAIN\\}', domain) }}"
+
+- name: Save ArgoCD manifests to file
+  copy:
+    content: "{{ argocd_manifests }}"
+    dest: "{{ temp_dir.path }}/argocd-manifests.yaml"
+    mode: '0644'
+
+- name: Apply ArgoCD manifests (first pass - CRDs)
+  command: kubectl apply -f {{ temp_dir.path }}/argocd-manifests.yaml
+  register: argocd_apply_first
+  changed_when: "'created' in argocd_apply_first.stdout or 'configured' in argocd_apply_first.stdout"
+  failed_when: false
+
+- name: Wait for ArgoCD CRDs to be established
+  shell: kubectl wait --for condition=established --timeout=60s crd/applications.argoproj.io crd/appprojects.argoproj.io
+  changed_when: false
+  when: "'customresourcedefinition' in argocd_apply_first.stdout"
+
+- name: Apply ArgoCD manifests (second pass - all resources)
+  command: kubectl apply -f {{ temp_dir.path }}/argocd-manifests.yaml
+  register: argocd_apply
+  changed_when: "'created' in argocd_apply.stdout or 'configured' in argocd_apply.stdout"
+
+- name: Wait for ArgoCD server to be ready
+  command: kubectl wait --for=condition=Available --timeout=300s deployment/argocd-server -n {{ argocd_namespace }}
+  changed_when: false
+
+- name: Get ArgoCD admin password
+  shell: kubectl -n {{ argocd_namespace }} get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
+  register: argocd_password
+  changed_when: false
+  retries: 10
+  delay: 5
+  until: argocd_password.rc == 0
+
+- name: Clean up temporary directory
+  file:
+    path: "{{ temp_dir.path }}"
+    state: absent
+
+- name: Display ArgoCD access information
+  debug:
+    msg:
+      - "ArgoCD deployed successfully!"
+      - "Access ArgoCD UI:"
+      - "  Via HTTPRoute: https://argocd.{{ domain }}"
+      - "  Via port-forward: kubectl port-forward svc/argocd-server -n argocd 8080:443"
+      - "  Local URL: https://localhost:8080"
+      - "  Username: admin"
+      - "  Password: {{ argocd_password.stdout }}"
+      - ""
+      - "App of Apps deployed:"
+      - "  - infrastructure: kubernetes/infrastructure"
+      - "  - apps: kubernetes/apps"

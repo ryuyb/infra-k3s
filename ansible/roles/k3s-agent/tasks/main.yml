@@ -44,11 +44,21 @@
     state: started
     enabled: yes
 
+- name: Wait for k3s-agent to be fully running
+  ansible.builtin.pause:
+    seconds: 30
+
 - name: Wait for node to register with cluster
-  ansible.builtin.command: >-
-    k3s kubectl --server={{ k3s_server_url }} --token={{ k3s_token }}
-    wait --for=condition=Ready node/{{ ansible_facts["hostname"] }} --timeout=120s
+  ansible.builtin.shell: |
+    for i in {1..12}; do
+      if k3s kubectl --server={{ k3s_server_url }} --token={{ k3s_token }} get node {{ inventory_hostname_short }} &>/dev/null; then
+        k3s kubectl --server={{ k3s_server_url }} --token={{ k3s_token }} wait --for=condition=Ready node/{{ inventory_hostname_short }} --timeout=120s
+        exit 0
+      fi
+      sleep 10
+    done
+    exit 1
   delegate_to: "{{ groups['k3s_masters'][0] }}"
   changed_when: false
-  retries: 3
-  delay: 10
+  retries: 1
+  delay: 0

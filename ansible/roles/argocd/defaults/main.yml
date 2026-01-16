@@ -1,0 +1,7 @@
+---
+# ArgoCD role defaults
+argocd_namespace: argocd
+argocd_version: stable
+git_repo_url: "{{ lookup('env', 'GIT_REPO_URL') | default(lookup('pipe', 'git remote get-url origin'), true) }}"
+domain: "{{ lookup('env', 'DOMAIN') | default('example.com', true) }}"
+kustomize_version: "5.8.0"

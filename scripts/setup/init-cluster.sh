@@ -12,21 +12,26 @@ Initialize a new K3s cluster.
 Options:
     --bootstrap              Run bootstrap playbook first
     --skip-bootstrap         Skip bootstrap, only install K3s
+    --with-argocd            Deploy ArgoCD and GitOps after K3s installation
     -h, --help               Show this help message
 
 Prerequisites:
     - Ansible inventory configured
     - SSH access to all nodes
     - Tailscale authkey in vault
+    - kustomize installed (for ArgoCD deployment)
 
 Examples:
     $(basename "$0")
     $(basename "$0") --bootstrap
     $(basename "$0") --skip-bootstrap
+    $(basename "$0") --with-argocd
+    $(basename "$0") --bootstrap --with-argocd
 EOF
 }
 
 BOOTSTRAP=true
+DEPLOY_ARGOCD=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -36,6 +41,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --skip-bootstrap)
             BOOTSTRAP=false
+            shift
+            ;;
+        --with-argocd)
+            DEPLOY_ARGOCD=true
             shift
             ;;
         -h|--help)
@@ -58,6 +67,7 @@ cd "$PROJECT_ROOT"
 echo "=== K3s Cluster Initialization ==="
 echo "Project root: $PROJECT_ROOT"
 echo "Bootstrap: $BOOTSTRAP"
+echo "Deploy ArgoCD: $DEPLOY_ARGOCD"
 echo ""
 
 # Verify prerequisites
@@ -102,6 +112,29 @@ echo "=== Step 3: Verify Cluster ==="
 export KUBECONFIG="$PROJECT_ROOT/kubeconfig.yaml"
 kubectl get nodes
 kubectl get pods -A
+
+# Step 4: Deploy ArgoCD (optional)
+if [[ "$DEPLOY_ARGOCD" == true ]]; then
+    echo ""
+    echo "=== Step 4: Deploy ArgoCD and GitOps ==="
+
+    # Check if kustomize is installed
+    if ! command -v kustomize &> /dev/null; then
+        echo "Error: kustomize is not installed" >&2
+        echo "Install with: brew install kustomize" >&2
+        exit 1
+    fi
+
+    ansible-playbook ansible/playbooks/deploy-argocd.yml
+
+    echo ""
+    echo "ArgoCD deployed! Access the UI with:"
+    echo "  kubectl port-forward svc/argocd-server -n argocd 8080:443"
+    echo "  URL: https://localhost:8080"
+    echo ""
+    echo "Get admin password:"
+    echo "  kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d"
+fi
 
 echo ""
 echo "Cluster initialization complete!"

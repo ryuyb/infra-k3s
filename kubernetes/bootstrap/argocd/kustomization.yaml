@@ -11,12 +11,14 @@ resources:
   - projects/infrastructure.yaml
   - apps/infrastructure.yaml
   - apps/apps.yaml
+  - httproute.yaml
 
 # ConfigMap to hold repo URL (set via envsubst or edit directly)
 configMapGenerator:
   - name: argocd-repo-config
     literals:
       - GIT_REPO_URL=${GIT_REPO_URL}
+      - DOMAIN=${DOMAIN}
 
 # Replace placeholder in Application specs with actual repo URL
 replacements:
@@ -29,3 +31,12 @@ replacements:
           kind: Application
         fieldPaths:
           - spec.source.repoURL
+  - source:
+      kind: ConfigMap
+      name: argocd-repo-config
+      fieldPath: data.DOMAIN
+    targets:
+      - select:
+          kind: HTTPRoute
+        fieldPaths:
+          - spec.hostnames.0

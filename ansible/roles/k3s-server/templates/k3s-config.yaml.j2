@@ -18,6 +18,8 @@ tls-san:
 # Use Tailscale interface for flannel CNI
 flannel-iface: {{ k3s_flannel_iface }}
 
+flannel-backend: host-gw
+
 # Disable components we don't need or will replace
 {% if k3s_disable_traefik %}
 disable:
