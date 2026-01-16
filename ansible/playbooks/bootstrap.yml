@@ -1,0 +1,15 @@
+---
+# Bootstrap playbook: Initial VPS setup
+# Run this first on new nodes to install base packages, configure firewall, and join Tailscale network
+#
+# Usage:
+#   ansible-playbook playbooks/bootstrap.yml
+#   ansible-playbook playbooks/bootstrap.yml --limit master-1
+
+- name: Bootstrap VPS nodes
+  hosts: all
+  become: true
+  roles:
+    - common
+    - firewall
+    - tailscale

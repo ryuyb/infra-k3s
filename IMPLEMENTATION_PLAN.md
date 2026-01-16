@@ -127,10 +127,10 @@ ansible/playbooks/
 - site.yml: Main entry point that includes all playbooks
 
 **Checklist:**
-- [ ] bootstrap.yml targets all hosts
-- [ ] Runs roles in order: common, firewall, tailscale
-- [ ] site.yml imports bootstrap and k3s playbooks
-- [ ] Validate: `ansible-playbook playbooks/bootstrap.yml --syntax-check`
+- [x] bootstrap.yml targets all hosts
+- [x] Runs roles in order: common, firewall, tailscale
+- [x] site.yml imports bootstrap and k3s playbooks
+- [x] Validate: `ansible-playbook playbooks/bootstrap.yml --syntax-check`
 
 ---
 

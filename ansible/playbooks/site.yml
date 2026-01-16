@@ -1,0 +1,11 @@
+---
+# Main entry point: Run all playbooks in order
+#
+# Usage:
+#   ansible-playbook playbooks/site.yml
+
+- name: Bootstrap all nodes
+  ansible.builtin.import_playbook: bootstrap.yml
+
+- name: Deploy K3s cluster
+  ansible.builtin.import_playbook: k3s-cluster.yml
