@@ -106,11 +106,11 @@ ansible/roles/tailscale/
 - Export Tailscale IP as fact
 
 **Checklist:**
-- [ ] Installs Tailscale for Debian and RHEL families
-- [ ] Authenticates with `tailscale up --authkey --ssh`
-- [ ] Sets `tailscale_ip` fact after authentication
-- [ ] Handler restarts tailscaled on config changes
-- [ ] Validate: Role syntax check passes
+- [x] Installs Tailscale for Debian and RHEL families
+- [x] Authenticates with `tailscale up --authkey --ssh`
+- [x] Sets `tailscale_ip` fact after authentication
+- [x] Handler restarts tailscaled on config changes
+- [x] Validate: Role syntax check passes
 
 ---
 

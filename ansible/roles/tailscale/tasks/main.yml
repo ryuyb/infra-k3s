@@ -13,9 +13,18 @@
   changed_when: true
   when: tailscale_existence.rc != 0
 
+# Tailscale up parameters:
+#   --ssh: Enable Tailscale SSH (access nodes via Tailscale without managing SSH keys)
+#   --netfilter-mode=off: Don't modify iptables (we manage firewall separately)
+#   --accept-dns=false: Don't use Tailscale's DNS (keep system DNS)
+#   --timeout=120s: Wait up to 120s for authentication
+#   --advertise-tags=tag:ansible: Tag node for ACL policies
+#   --auth-key: Pre-authenticated key from Tailscale admin console
+#   ?ephemeral=false: Node persists after disconnect (not removed automatically)
 - name: Provision tailscale node
   ansible.builtin.command: >-
     tailscale up
+    --ssh
     --netfilter-mode=off
     --accept-dns=false
     --timeout=120s
