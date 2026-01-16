@@ -16,7 +16,7 @@ Managing multiple VPS servers across cloud platforms with k3s, Tailscale network
 ### Prerequisites
 
 ```bash
-brew install direnv sops age ansible
+brew install direnv ansible kubeseal
 ```
 
 ### Setup
@@ -28,20 +28,16 @@ echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc
 # fish
 echo 'direnv hook fish | source' >> ~/.config/fish/config.fish
 
-# 2. Generate age key for SOPS (in project directory)
-age-keygen -o .age-key.txt
-# Update .sops.yaml with your public key from the output
-
-# 3. Setup environment
+# 2. Setup environment
 cp .envrc.example .envrc.local
 # Edit .envrc.local with your secrets
 direnv allow
 
-# 4. Create Ansible vault password (in project directory)
+# 3. Create Ansible vault password (in project directory)
 echo "your-vault-password" > .vault_pass
 chmod 600 .vault_pass
 
-# 5. Initialize Ansible vault
+# 4. Initialize Ansible vault
 ansible-vault create ansible/inventory/group_vars/all/vault.yml
 ```
 

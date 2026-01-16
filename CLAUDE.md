@@ -16,6 +16,9 @@ ansible-playbook ansible/playbooks/bootstrap.yml
 # Deploy K3s cluster
 ansible-playbook ansible/playbooks/k3s-cluster.yml
 
+# Setup Velero secrets from environment variables
+ansible-playbook ansible/playbooks/setup-velero-secrets.yml
+
 # Upgrade K3s (rolling, one node at a time)
 ansible-playbook ansible/playbooks/upgrade.yml
 
@@ -35,11 +38,17 @@ tofu apply -target=module.cloudflare-dns
 
 ### Kubernetes/GitOps
 ```bash
-# Encrypt secrets with SOPS
-sops -e -i kubernetes/apps/myapp/secret.yaml
+# Encrypt secrets with Sealed Secrets
+kubectl create secret generic myapp-secret \
+  --from-literal=key=value \
+  --dry-run=client -o yaml | \
+  kubeseal --format yaml > kubernetes/apps/myapp/sealedsecret.yaml
 
-# Decrypt for viewing
-sops -d kubernetes/apps/myapp/secret.yaml
+# Fetch cluster certificate for offline encryption
+kubeseal --fetch-cert > sealed-secrets-cert.pem
+
+# Encrypt using local certificate (no cluster connection needed)
+kubeseal --cert sealed-secrets-cert.pem --format yaml < secret.yaml > sealedsecret.yaml
 ```
 
 ### Disaster Recovery
@@ -66,7 +75,7 @@ sops -d kubernetes/apps/myapp/secret.yaml
 **Secrets management**:
 - Local dev: direnv (`.envrc`)
 - Ansible: Ansible Vault (`group_vars/all/vault.yml`)
-- Kubernetes: SOPS + age (encrypted in git, decrypted by ArgoCD with KSOPS)
+- Kubernetes: Sealed Secrets (encrypted in git, decrypted by sealed-secrets controller)
 - OpenTofu: Environment variables via `TF_VAR_*`
 
 **GitOps**: ArgoCD with App of Apps pattern - `kubernetes/bootstrap/argocd/apps/` contains root applications that deploy infrastructure and apps
