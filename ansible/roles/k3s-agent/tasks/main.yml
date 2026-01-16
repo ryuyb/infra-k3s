@@ -1,0 +1,43 @@
+---
+- name: Create k3s config directory
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    mode: "0755"
+
+- name: Deploy k3s agent config
+  ansible.builtin.template:
+    src: k3s-agent-config.yaml.j2
+    dest: /etc/rancher/k3s/config.yaml
+    mode: "0644"
+  notify: Restart k3s-agent
+
+- name: Check if k3s-agent is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/k3s
+  register: k3s_binary
+
+- name: Install k3s agent
+  ansible.builtin.shell: |
+    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" sh -
+  args:
+    executable: /bin/bash
+  environment:
+    K3S_URL: "{{ k3s_server_url }}"
+    K3S_TOKEN: "{{ k3s_token }}"
+  when: not k3s_binary.stat.exists
+
+- name: Wait for k3s-agent service to start
+  ansible.builtin.service:
+    name: k3s-agent
+    state: started
+    enabled: yes
+
+- name: Wait for node to register with cluster
+  ansible.builtin.command: >-
+    k3s kubectl --server={{ k3s_server_url }} --token={{ k3s_token }}
+    wait --for=condition=Ready node/{{ inventory_hostname }} --timeout=120s
+  delegate_to: "{{ groups['k3s_masters'][0] }}"
+  changed_when: false
+  retries: 3
+  delay: 10

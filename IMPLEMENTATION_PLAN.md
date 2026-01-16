@@ -202,10 +202,10 @@ ansible/roles/k3s-agent/
 - Configure node labels
 
 **Checklist:**
-- [ ] K3s agent installed and joined to cluster
-- [ ] Uses Tailscale IP to connect to master
-- [ ] Node labels applied (zone, instance-type)
-- [ ] Validate: `kubectl get nodes` shows worker node Ready
+- [x] K3s agent installed and joined to cluster
+- [x] Uses Tailscale IP to connect to master
+- [x] Node labels applied (zone, instance-type)
+- [x] Validate: `kubectl get nodes` shows worker node Ready
 
 ---
 

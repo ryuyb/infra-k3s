@@ -1,0 +1,18 @@
+# K3s agent configuration
+# https://docs.k3s.io/installation/configuration
+
+# Connect to k3s server via Tailscale
+server: {{ k3s_server_url }}
+token: {{ k3s_token }}
+
+# Bind to Tailscale IP
+node-ip: {{ tailscale_ip }}
+
+# Use Tailscale interface for flannel
+flannel-iface: {{ k3s_flannel_iface }}
+
+# Node labels for scheduling
+node-label:
+{% for label in k3s_node_labels %}
+  - {{ label }}
+{% endfor %}
