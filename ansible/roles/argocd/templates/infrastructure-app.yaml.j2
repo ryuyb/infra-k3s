@@ -1,0 +1,33 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infrastructure
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infrastructure
+  source:
+    repoURL: {{ git_repo_url }}
+    targetRevision: HEAD
+    path: helm/infrastructure
+    helm:
+      parameters:
+        - name: domain
+          value: {{ domain }}
+        - name: velero.bucket
+          value: {{ lookup('env', 'VELERO_BUCKET') }}
+        - name: velero.endpoint
+          value: {{ lookup('env', 'R2_ENDPOINT') }}
+        - name: grafana.adminPassword
+          value: {{ lookup('env', 'GRAFANA_PASSWORD') | default('admin', true) }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,31 @@
+# Infrastructure configuration
+# Domain will be set by ArgoCD Application parameters
+domain: DOMAIN_PLACEHOLDER
+
+# Component versions (updated 2026-01-16)
+certManager:
+  version: v1.19.2
+
+traefik:
+  version: 38.0.2
+
+externalDns:
+  version: 1.20.0
+
+sealedSecrets:
+  version: 2.18.0
+
+prometheus:
+  version: 80.14.4
+
+grafana:
+  version: 10.5.8
+  adminPassword: GRAFANA_PASSWORD_PLACEHOLDER
+
+velero:
+  version: 11.3.2
+  bucket: VELERO_BUCKET_PLACEHOLDER
+  endpoint: R2_ENDPOINT_PLACEHOLDER
+
+gatewayApi:
+  version: 1.2.1

@@ -18,3 +18,6 @@ export VELERO_BUCKET="k3s-backups"
 export R2_ENDPOINT="https://ACCOUNT_ID.r2.cloudflarestorage.com"
 export R2_ACCESS_KEY_ID=""
 export R2_SECRET_ACCESS_KEY=""
+
+# Monitoring
+export GRAFANA_PASSWORD=""

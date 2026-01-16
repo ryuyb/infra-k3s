@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Multi-cloud K3s infrastructure managing VPS servers across providers (Hetzner, Vultr, AWS) with Tailscale networking, GitOps (ArgoCD), and disaster recovery via Velero to Cloudflare R2.
+Multi-cloud K3s infrastructure managing VPS servers across providers (Hetzner, Vultr, AWS) with Tailscale networking, GitOps (ArgoCD + Helm), and disaster recovery via Velero to Cloudflare R2.
 
 ## Commands
 
@@ -16,12 +16,12 @@ ansible-playbook ansible/playbooks/bootstrap.yml
 # Deploy K3s cluster
 ansible-playbook ansible/playbooks/k3s-cluster.yml
 
-# Deploy ArgoCD and GitOps (after K3s is running)
+# Deploy ArgoCD via Helm and GitOps (after K3s is running)
 # Set DOMAIN environment variable for HTTPRoute
 DOMAIN=yourdomain.com ansible-playbook ansible/playbooks/deploy-argocd.yml
 
-# Setup Velero secrets from environment variables
-ansible-playbook ansible/playbooks/setup-velero-secrets.yml
+# Setup cluster secrets from environment variables
+ansible-playbook ansible/playbooks/setup-secrets.yml
 
 # Upgrade K3s (rolling, one node at a time)
 ansible-playbook ansible/playbooks/upgrade.yml
@@ -34,6 +34,18 @@ ansible-vault edit ansible/inventory/group_vars/all/vault.yml
 
 # One-command cluster initialization (bootstrap + K3s + ArgoCD)
 DOMAIN=yourdomain.com ./scripts/setup/init-cluster.sh --with-argocd
+```
+
+### Helm
+```bash
+# List installed Helm releases
+helm list -A
+
+# Upgrade ArgoCD
+helm upgrade argocd argo/argo-cd -n argocd --values helm/infrastructure/values.yaml
+
+# View infrastructure components
+kubectl get applications -n argocd
 ```
 
 ### OpenTofu
@@ -71,7 +83,8 @@ kubeseal --cert sealed-secrets-cert.pem --format yaml < secret.yaml > sealedsecr
 ### Directory Layout
 - `ansible/` - Server provisioning: playbooks orchestrate roles for bootstrap, k3s setup, networking
 - `tofu/` - OpenTofu modules for Cloudflare DNS and R2 backup buckets
-- `kubernetes/` - GitOps manifests: `bootstrap/` (ArgoCD), `infrastructure/` (cert-manager, ingress, velero), `apps/`
+- `helm/` - Helm charts: `infrastructure/` (App of Apps for infrastructure components), `apps/` (application deployments)
+- `kubernetes/` - Legacy kustomize manifests (being migrated to Helm)
 - `scripts/` - Utilities for setup, backup, and disaster recovery
 - `config/` - Shared Velero schedules and ArgoCD repo configs
 
@@ -85,16 +98,20 @@ kubeseal --cert sealed-secrets-cert.pem --format yaml < secret.yaml > sealedsecr
 - Kubernetes: Sealed Secrets (encrypted in git, decrypted by sealed-secrets controller)
 - OpenTofu: Environment variables via `TF_VAR_*`
 
-**GitOps**: ArgoCD with App of Apps pattern - `kubernetes/bootstrap/argocd/apps/` contains root applications that deploy infrastructure and apps
+**GitOps**: ArgoCD with App of Apps pattern using Helm charts:
+- ArgoCD installed via Helm chart
+- Infrastructure components deployed via Helm charts (cert-manager, traefik, external-dns, etc.)
+- `helm/infrastructure/` contains ArgoCD Applications that reference official Helm charts
+- Custom resources (Gateway, HTTPRoutes, ClusterIssuers) managed via Helm templates
 
-**Disaster recovery**: Velero + Kopia backs up local PVCs to Cloudflare R2. On node failure, workloads restore to another node via DR scripts.
+**Disaster recovery**: Velero (deployed via Helm) backs up local PVCs to Cloudflare R2. On node failure, workloads restore to another node via DR scripts.
 
 ### Ansible Role Dependencies
 ```
 bootstrap.yml → common → firewall → tailscale
 k3s-master.yml → k3s-prereq → k3s-server
 k3s-worker.yml → k3s-prereq → k3s-agent
-deploy-argocd.yml → argocd (runs on k3s_masters[0], installs kustomize, clones repo)
+deploy-argocd.yml → argocd (runs on k3s_masters[0], installs Helm, deploys ArgoCD chart)
 ```
 
 ### Node Groups

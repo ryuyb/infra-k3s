@@ -1,0 +1,43 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: external-dns
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infrastructure
+  source:
+    repoURL: https://kubernetes-sigs.github.io/external-dns
+    chart: external-dns
+    targetRevision: {{ .Values.externalDns.version }}
+    helm:
+      releaseName: external-dns
+      values: |
+        provider:
+          name: cloudflare
+
+        env:
+          - name: CF_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: cloudflare-api-token
+                key: api-token
+
+        sources:
+          - gateway-httproute
+          - service
+
+        policy: sync
+        registry: txt
+        txtOwnerId: k3s-cluster
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: external-dns
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
