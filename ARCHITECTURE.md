@@ -150,7 +150,6 @@ export ANSIBLE_VAULT_PASSWORD_FILE=~/.ansible-vault-pass
 # ansible/inventory/group_vars/all/vault.yml (encrypted)
 vault_tailscale_authkey: "tskey-auth-xxx"
 vault_vultr_password: "xxx"
-vault_k3s_token: "xxx"
 ```
 
 ```bash
@@ -381,6 +380,34 @@ tailscale_authkey: "{{ vault_tailscale_authkey }}"
    - Detect Tailscale is installed
    - Fetch current Tailscale IP at runtime
    - Connect via Tailscale network
+
+### K3s Cluster Flow
+
+1. Run `ansible-playbook playbooks/k3s-cluster.yml`
+2. Master node installs k3s server
+3. Playbook automatically fetches k3s token from master
+4. Token is passed to worker nodes as a runtime fact
+5. Workers join cluster using the token (no manual steps)
+
+```yaml
+# k3s-cluster.yml flow
+- hosts: k3s_masters
+  roles: [k3s-prereq, k3s-server]
+  tasks:
+    - name: Fetch k3s token
+      slurp:
+        src: /var/lib/rancher/k3s/server/node-token
+      register: k3s_token_raw
+    - name: Share token with all hosts
+      set_fact:
+        k3s_token: "{{ k3s_token_raw.content | b64decode | trim }}"
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      loop: "{{ groups['all'] }}"
+
+- hosts: k3s_workers
+  roles: [k3s-prereq, k3s-agent]  # Uses k3s_token fact
+```
 
 ## Disaster Recovery Design
 

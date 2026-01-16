@@ -35,10 +35,10 @@ ansible/
 ```
 
 **Checklist:**
-- [ ] ansible.cfg sets inventory path, vault password file, SSH settings
-- [ ] hosts.yml has k3s_masters and k3s_workers groups with placeholder hosts
-- [ ] all.yml defines ansible_host dynamic resolution: `{{ tailscale_ip | default(public_ip) }}`
-- [ ] Validate: `ansible-inventory --list` runs without errors
+- [x] ansible.cfg sets inventory path, vault password file, SSH settings
+- [x] hosts.yml has k3s_masters and k3s_workers groups with placeholder hosts
+- [x] all.yml defines ansible_host dynamic resolution: `{{ tailscale_ip | default(public_ip) }}`
+- [x] Validate: `ansible-inventory --list` runs without errors
 
 ---
 

@@ -1,0 +1,9 @@
+---
+# Dynamic host resolution: use Tailscale IP if available, otherwise public IP
+ansible_host: "{{ tailscale_ip | default(public_ip) }}"
+
+# Tailscale auth key (from vault)
+tailscale_authkey: "{{ vault_tailscale_authkey }}"
+
+# Common settings
+timezone: UTC
