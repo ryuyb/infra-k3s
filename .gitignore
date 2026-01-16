@@ -8,16 +8,12 @@
 !.env.example
 .envrc.local
 .vault_pass
-.age-key.txt
 credentials.yaml
 **/credentials.yaml
 !**/credentials.yaml.example
 
-# SOPS encrypted files (keep these, but ignore decrypted)
-*.dec.yaml
-*.dec.yml
-*.decrypted.yaml
-*.decrypted.yml
+# Sealed Secrets certificate (for offline sealing)
+sealed-secrets-cert.pem
 
 # Terraform/OpenTofu
 **/.terraform/

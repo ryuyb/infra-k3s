@@ -1,33 +1,23 @@
 # Velero Secrets Management
 
-本文档说明如何使用 SOPS 加密 Velero 的敏感配置。
+本文档说明如何使用 Sealed Secrets 加密 Velero 的敏感配置。
 
 ## 前提条件
 
 ```bash
-# 安装工具
-brew install sops age
+# 安装 kubeseal CLI
+brew install kubeseal
 
-# 生成 age 密钥（首次设置）
-age-keygen -o .age-key.txt
-# 输出示例：
-# Public key: age1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-# 将公钥更新到 .sops.yaml
+# 确保 sealed-secrets controller 已部署
+kubectl get pods -n kube-system -l app.kubernetes.io/name=sealed-secrets
 ```
 
-## 方式一：SOPS 加密 Secret（推荐用于 GitOps）
+## 方式一：Sealed Secrets（推荐用于 GitOps）
 
-### 1. 创建 Secret 文件
+### 1. 创建原始 Secret 文件
 
 ```bash
-cp secret.sops.yaml.example secret.sops.yaml
-```
-
-### 2. 编辑填入实际值
-
-```yaml
-# secret.sops.yaml
+cat > /tmp/velero-secret.yaml <<EOF
 apiVersion: v1
 kind: Secret
 metadata:
@@ -39,35 +29,36 @@ stringData:
     [default]
     aws_access_key_id=YOUR_R2_ACCESS_KEY_ID
     aws_secret_access_key=YOUR_R2_SECRET_ACCESS_KEY
+EOF
 ```
 
-### 3. 加密文件
+### 2. 使用 kubeseal 加密
 
 ```bash
-# 使用 .sops.yaml 中配置的 age 公钥加密
-sops -e -i secret.sops.yaml
+# 从集群获取公钥并加密
+kubeseal --format yaml < /tmp/velero-secret.yaml > sealedsecret.yaml
+
+# 删除原始文件
+rm /tmp/velero-secret.yaml
 ```
 
-### 4. 验证加密
+### 3. 验证加密
 
 ```bash
 # 查看加密后的内容
-cat secret.sops.yaml
-
-# 解密查看（需要 .age-key.txt）
-sops -d secret.sops.yaml
+cat sealedsecret.yaml
 ```
 
-### 5. 提交到 Git
+### 4. 提交到 Git
 
 ```bash
-git add secret.sops.yaml
-git commit -m "Add encrypted velero credentials"
+git add sealedsecret.yaml
+git commit -m "Add sealed velero credentials"
 ```
 
-### 6. ArgoCD 自动解密
+### 5. ArgoCD 自动解封
 
-ArgoCD 配置了 KSOPS，会在部署时自动解密 `.sops.yaml` 文件。
+Sealed Secrets controller 会自动将 SealedSecret 解封为普通 Secret。
 
 ## 方式二：脚本创建 Secret（推荐用于手动部署）
 
@@ -85,36 +76,36 @@ export R2_ENDPOINT="https://account-id.r2.cloudflarestorage.com"
 ## 常用命令
 
 ```bash
-# 编辑加密文件（自动解密→编辑→加密）
-sops secret.sops.yaml
+# 获取集群公钥（离线加密用）
+kubeseal --fetch-cert > sealed-secrets-cert.pem
 
-# 解密查看
-sops -d secret.sops.yaml
+# 使用本地证书加密（无需连接集群）
+kubeseal --cert sealed-secrets-cert.pem --format yaml < secret.yaml > sealedsecret.yaml
 
-# 重新加密（更换密钥后）
-sops updatekeys secret.sops.yaml
-
-# 手动应用 Secret
-sops -d secret.sops.yaml | kubectl apply -f -
+# 查看 controller 日志
+kubectl logs -n kube-system -l app.kubernetes.io/name=sealed-secrets
 ```
 
 ## 故障排除
 
-### 解密失败
+### 解封失败
 
 ```bash
-# 检查 age 密钥文件
-ls -la .age-key.txt
+# 检查 SealedSecret 状态
+kubectl get sealedsecret -n velero
 
-# 检查环境变量
-echo $SOPS_AGE_KEY_FILE
+# 检查 controller 日志
+kubectl logs -n kube-system -l app.kubernetes.io/name=sealed-secrets
 
-# 确保 direnv 已加载
-direnv allow
+# 确保 namespace 匹配（SealedSecret 绑定到特定 namespace）
 ```
 
-### ArgoCD 解密失败
+### 密钥轮换
 
-1. 检查 ArgoCD repo-server 是否有 `sops-age-key` Secret
-2. 检查 KSOPS 插件是否正确安装
-3. 查看 ArgoCD 日志：`kubectl logs -n argocd deploy/argocd-repo-server`
+```bash
+# 备份当前密钥
+kubectl get secret -n kube-system -l sealedsecrets.bitnami.com/sealed-secrets-key -o yaml > sealed-secrets-backup.yaml
+
+# 重新加密所有 secrets（密钥轮换后）
+kubeseal --re-encrypt < sealedsecret.yaml > sealedsecret-new.yaml
+```

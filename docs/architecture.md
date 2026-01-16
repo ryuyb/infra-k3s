@@ -35,7 +35,7 @@ Multi-cloud K3s cluster spanning VPS providers (Hetzner, Vultr, AWS) connected v
 | Orchestration | K3s | Lightweight Kubernetes |
 | Ingress | Traefik + Gateway API | Traffic routing, TLS termination |
 | TLS | cert-manager | Automated certificate management |
-| GitOps | ArgoCD + KSOPS | Declarative deployments, secret decryption |
+| GitOps | ArgoCD | Declarative deployments |
 | Backup | Velero + Kopia | Cluster and PVC backup to R2 |
 | IaC | OpenTofu | DNS and R2 bucket provisioning |
 | Config | Ansible | Server provisioning and K3s installation |
@@ -59,7 +59,7 @@ Internet → Cloudflare DNS → VPS Public IP → Traefik (Gateway)
 |---------|------|---------|
 | Local dev | direnv | `.envrc.local` (gitignored) |
 | Ansible | Ansible Vault | `group_vars/all/vault.yml` |
-| Kubernetes | SOPS + age | Encrypted in git, decrypted by KSOPS |
+| Kubernetes | Sealed Secrets | Encrypted in git, decrypted by controller |
 | OpenTofu | Environment | `TF_VAR_*` variables |
 
 ## Directory Structure
@@ -91,5 +91,5 @@ infra-k3s/
 1. **Tailscale over VPN**: Zero-config mesh, no central gateway, works across NAT
 2. **Gateway API over Ingress**: Modern standard, better multi-tenancy support
 3. **cert-manager over Traefik ACME**: Centralized certificate management, supports DNS-01 for wildcards
-4. **SOPS over Sealed Secrets**: Works offline, age encryption, git-friendly
+4. **Sealed Secrets over SOPS**: No custom ArgoCD config, controller handles decryption
 5. **R2 over S3**: Zero egress fees for backup restoration

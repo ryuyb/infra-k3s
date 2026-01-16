@@ -1,9 +1,6 @@
 ---
 # ArgoCD Installation
 # Apply with: GIT_REPO_URL=https://github.com/you/repo.git kustomize build kubernetes/bootstrap/argocd | kubectl apply -f -
-#
-# This uses Kustomize to install ArgoCD from the official manifests
-# with custom patches for KSOPS (SOPS decryption) support.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -32,38 +29,3 @@ replacements:
           kind: Application
         fieldPaths:
           - spec.source.repoURL
-
-patches:
-  # Enable KSOPS for SOPS secret decryption
-  - patch: |-
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: argocd-repo-server
-      spec:
-        template:
-          spec:
-            containers:
-              - name: argocd-repo-server
-                env:
-                  - name: SOPS_AGE_KEY_FILE
-                    value: /sops/age/keys.txt
-                volumeMounts:
-                  - name: sops-age
-                    mountPath: /sops/age
-            volumes:
-              - name: sops-age
-                secret:
-                  secretName: sops-age-key
-            initContainers:
-              - name: install-ksops
-                image: viaductoss/ksops:v4.3.2
-                command: ["/bin/sh", "-c"]
-                args:
-                  - echo "Installing KSOPS...";
-                    mv /usr/local/bin/ksops /custom-tools/;
-                    mv /usr/local/bin/kustomize /custom-tools/;
-                    echo "Done.";
-                volumeMounts:
-                  - name: custom-tools
-                    mountPath: /custom-tools
