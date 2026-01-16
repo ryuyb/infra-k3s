@@ -82,11 +82,11 @@ ansible/roles/firewall/
 - Default deny incoming, allow outgoing
 
 **Checklist:**
-- [ ] Firewall enabled with default deny policy
-- [ ] SSH port allowed
-- [ ] Tailscale UDP port allowed
-- [ ] K3s API port (6443) allowed from Tailscale network only
-- [ ] Validate: `ufw status` shows correct rules (on test)
+- [x] Firewall enabled with default deny policy
+- [x] SSH port allowed
+- [x] Tailscale UDP port allowed
+- [x] K3s API port (6443) allowed from Tailscale network only
+- [x] Validate: `ufw status` shows correct rules (on test)
 
 ---
 

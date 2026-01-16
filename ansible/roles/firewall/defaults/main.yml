@@ -1,0 +1,15 @@
+---
+firewall_ssh_port: "22"
+firewall_tailscale_cidr: "100.64.0.0/10"
+firewall_tailscale_cidr_v6: "fd7a:115c:a1e0::/48"
+firewall_allow_k3s_api: true
+
+# Custom ports to open
+# Note: UFW's from_ip: any matches both IPv4 and IPv6, no separate config needed
+# Example:
+#   firewall_custom_ports:
+#     - { port: "8080", proto: "tcp", from_ip: "10.0.0.0/8" }
+#     - { port: "8080", proto: "tcp", from_ip: "2001:db8::/32", family: "ipv6" }
+firewall_custom_ports:
+  - { port: "80", proto: "tcp" }
+  - { port: "443", proto: "tcp" }

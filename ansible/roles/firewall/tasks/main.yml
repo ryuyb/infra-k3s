@@ -1,0 +1,175 @@
+---
+# UFW (Debian/Ubuntu)
+- name: Install UFW
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Set UFW default deny incoming
+  community.general.ufw:
+    direction: incoming
+    policy: deny
+  when: ansible_os_family == "Debian"
+
+- name: Set UFW default allow outgoing
+  community.general.ufw:
+    direction: outgoing
+    policy: allow
+  when: ansible_os_family == "Debian"
+
+- name: Allow SSH
+  community.general.ufw:
+    rule: allow
+    port: "{{ firewall_ssh_port }}"
+    proto: tcp
+  when: ansible_os_family == "Debian"
+
+- name: Allow Tailscale UDP
+  community.general.ufw:
+    rule: allow
+    port: "41641"
+    proto: udp
+  when: ansible_os_family == "Debian"
+
+- name: Allow K3s API from Tailscale network
+  community.general.ufw:
+    rule: allow
+    port: "6443"
+    proto: tcp
+    from_ip: "{{ firewall_tailscale_cidr }}"
+  when:
+    - ansible_os_family == "Debian"
+    - firewall_allow_k3s_api
+
+- name: Allow K3s API from Tailscale network (IPv6)
+  community.general.ufw:
+    rule: allow
+    port: "6443"
+    proto: tcp
+    from_ip: "{{ firewall_tailscale_cidr_v6 }}"
+  when:
+    - ansible_os_family == "Debian"
+    - firewall_allow_k3s_api
+
+- name: Allow Kubelet from Tailscale network
+  community.general.ufw:
+    rule: allow
+    port: "10250"
+    proto: tcp
+    from_ip: "{{ firewall_tailscale_cidr }}"
+  when:
+    - ansible_os_family == "Debian"
+    - firewall_allow_k3s_api
+
+- name: Allow Kubelet from Tailscale network (IPv6)
+  community.general.ufw:
+    rule: allow
+    port: "10250"
+    proto: tcp
+    from_ip: "{{ firewall_tailscale_cidr_v6 }}"
+  when:
+    - ansible_os_family == "Debian"
+    - firewall_allow_k3s_api
+
+- name: Allow custom ports (UFW)
+  community.general.ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto | default('tcp') }}"
+    from_ip: "{{ item.from_ip | default('any') }}"
+  loop: "{{ firewall_custom_ports }}"
+  when: ansible_os_family == "Debian"
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+  when: ansible_os_family == "Debian"
+
+# firewalld (RHEL/CentOS)
+- name: Install firewalld
+  ansible.builtin.yum:
+    name: firewalld
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Start firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: started
+    enabled: yes
+  when: ansible_os_family == "RedHat"
+
+- name: Allow SSH (firewalld)
+  ansible.posix.firewalld:
+    port: "{{ firewall_ssh_port }}/tcp"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when: ansible_os_family == "RedHat"
+
+- name: Allow Tailscale UDP (firewalld)
+  ansible.posix.firewalld:
+    port: 41641/udp
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when: ansible_os_family == "RedHat"
+
+- name: Allow K3s API from Tailscale (firewalld)
+  ansible.posix.firewalld:
+    rich_rule: "rule family=ipv4 source address={{ firewall_tailscale_cidr }} port port=6443 protocol=tcp accept"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when:
+    - ansible_os_family == "RedHat"
+    - firewall_allow_k3s_api
+
+- name: Allow K3s API from Tailscale IPv6 (firewalld)
+  ansible.posix.firewalld:
+    rich_rule: "rule family=ipv6 source address={{ firewall_tailscale_cidr_v6 }} port port=6443 protocol=tcp accept"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when:
+    - ansible_os_family == "RedHat"
+    - firewall_allow_k3s_api
+
+- name: Allow Kubelet from Tailscale (firewalld)
+  ansible.posix.firewalld:
+    rich_rule: "rule family=ipv4 source address={{ firewall_tailscale_cidr }} port port=10250 protocol=tcp accept"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when:
+    - ansible_os_family == "RedHat"
+    - firewall_allow_k3s_api
+
+- name: Allow Kubelet from Tailscale IPv6 (firewalld)
+  ansible.posix.firewalld:
+    rich_rule: "rule family=ipv6 source address={{ firewall_tailscale_cidr_v6 }} port port=10250 protocol=tcp accept"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when:
+    - ansible_os_family == "RedHat"
+    - firewall_allow_k3s_api
+
+- name: Allow custom ports (firewalld) - any source
+  ansible.posix.firewalld:
+    port: "{{ item.port }}/{{ item.proto | default('tcp') }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop: "{{ firewall_custom_ports | selectattr('from_ip', 'undefined') | list }}"
+  when: ansible_os_family == "RedHat"
+
+- name: Allow custom ports (firewalld) - specific source
+  ansible.posix.firewalld:
+    rich_rule: "rule family={{ item.family | default('ipv4') }} source address={{ item.from_ip }} port port={{ item.port }} protocol={{ item.proto | default('tcp') }} accept"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop: "{{ firewall_custom_ports | selectattr('from_ip', 'defined') | list }}"
+  when: ansible_os_family == "RedHat"

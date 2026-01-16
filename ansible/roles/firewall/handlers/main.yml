@@ -1,0 +1,11 @@
+---
+- name: Reload UFW
+  community.general.ufw:
+    state: reloaded
+  when: ansible_os_family == "Debian"
+
+- name: Reload firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: reloaded
+  when: ansible_os_family == "RedHat"
