@@ -3,8 +3,6 @@
 *.pem
 *.crt
 !*.example.key
-vault.yml
-**/vault.yml
 .env
 .env.*
 !.env.example

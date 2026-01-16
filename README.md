@@ -45,6 +45,16 @@ chmod 600 .vault_pass
 ansible-vault create ansible/inventory/group_vars/all/vault.yml
 ```
 
+### Edit Secrets
+
+```bash
+# Edit encrypted vault (requires .vault_pass)
+ansible-vault edit ansible/inventory/group_vars/all/vault.yml
+
+# Required secrets:
+#   vault_tailscale_authkey: "tskey-auth-xxx"  # From https://login.tailscale.com/admin/settings/keys
+```
+
 ### Deploy
 
 ```bash
