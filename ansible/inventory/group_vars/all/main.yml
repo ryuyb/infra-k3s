@@ -2,6 +2,9 @@
 # Dynamic host resolution: use Tailscale IP if available, otherwise public IP
 ansible_host: "{{ tailscale_ip | default(public_ip) }}"
 
+# Python interpreter
+ansible_python_interpreter: /usr/bin/python3
+
 # Tailscale auth key (from vault)
 tailscale_authkey: "{{ vault_tailscale_authkey }}"
 

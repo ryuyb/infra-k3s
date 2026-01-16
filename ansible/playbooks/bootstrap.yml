@@ -9,6 +9,33 @@
 - name: Bootstrap VPS nodes
   hosts: all
   become: true
+  gather_facts: false
+  pre_tasks:
+    - name: Install Python if not present
+      ansible.builtin.raw: |
+        if ! command -v python3 &> /dev/null; then
+          if command -v apt-get &> /dev/null; then
+            apt-get update && apt-get install -y python3 python3-apt python3-pip python3-kubernetes
+          elif command -v yum &> /dev/null; then
+            yum install -y python3 python3-pip
+            pip3 install kubernetes
+          elif command -v dnf &> /dev/null; then
+            dnf install -y python3 python3-pip
+            pip3 install kubernetes
+          fi
+        else
+          # Python exists, ensure kubernetes library is installed
+          if command -v apt-get &> /dev/null; then
+            apt-get update && apt-get install -y python3-kubernetes
+          elif command -v pip3 &> /dev/null; then
+            pip3 install kubernetes
+          fi
+        fi
+      changed_when: false
+
+    - name: Gather facts after Python installation
+      ansible.builtin.setup:
+
   roles:
     - common
     - firewall

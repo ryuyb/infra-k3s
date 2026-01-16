@@ -9,7 +9,8 @@ common_packages:
   - unzip
   - ca-certificates
   - gnupg
+  - kmod
 
 # SSH hardening
-ssh_disable_password_auth: true
-ssh_disable_root_password_login: true
+ssh_disable_password_auth: false
+ssh_disable_root_password_login: false

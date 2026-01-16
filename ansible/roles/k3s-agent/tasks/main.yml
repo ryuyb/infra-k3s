@@ -1,4 +1,15 @@
 ---
+- name: Get tailscale IP if not defined
+  ansible.builtin.command: tailscale ip -4
+  register: tailscale_ip_result
+  changed_when: false
+  when: not (tailscale_ip is defined)
+
+- name: Set tailscale_ip fact if it was undefined
+  ansible.builtin.set_fact:
+    tailscale_ip: "{{ tailscale_ip_result.stdout }}"
+  when: not (tailscale_ip is defined) and tailscale_ip_result is defined
+
 - name: Create k3s config directory
   ansible.builtin.file:
     path: /etc/rancher/k3s
@@ -36,7 +47,7 @@
 - name: Wait for node to register with cluster
   ansible.builtin.command: >-
     k3s kubectl --server={{ k3s_server_url }} --token={{ k3s_token }}
-    wait --for=condition=Ready node/{{ inventory_hostname }} --timeout=120s
+    wait --for=condition=Ready node/{{ ansible_facts["hostname"] }} --timeout=120s
   delegate_to: "{{ groups['k3s_masters'][0] }}"
   changed_when: false
   retries: 3
