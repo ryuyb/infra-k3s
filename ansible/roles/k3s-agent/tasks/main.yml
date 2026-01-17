@@ -49,8 +49,12 @@
     enabled: yes
 
 - name: Wait for k3s-agent to be fully running
-  ansible.builtin.pause:
-    seconds: 30
+  ansible.builtin.systemd:
+    name: k3s-agent
+  register: k3s_agent_status
+  retries: 30
+  delay: 2
+  until: k3s_agent_status.status.ActiveState == "active"
 
 - name: Wait for node to register with cluster
   ansible.builtin.shell: |
