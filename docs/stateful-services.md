@@ -73,6 +73,13 @@ affinity:
 | Prometheus | monitoring | StatefulSet | PVC (local-path) | 10Gi | Time-series metrics database |
 | Grafana | monitoring | Deployment | PVC (local-path) | 5Gi | Dashboard configurations and data |
 
+### Worker1 Node (`kubernetes.io/hostname: worker1`)
+
+| Service | Namespace | Type | Storage | Size | Reason |
+|---------|-----------|------|---------|------|--------|
+| PostgreSQL | database | StatefulSet | PVC (local-path) | 20Gi | Relational database with persistent data |
+| pgAdmin4 | database | Deployment | PVC (local-path) | 5Gi | Database management UI, connection configs |
+
 ## Configuration Details
 
 ### Prometheus
@@ -108,6 +115,43 @@ affinity:
     kubernetes.io/hostname: master
   ```
 
+### PostgreSQL
+- **File**: `helm/apps/templates/postgresql.yaml`
+- **Configuration**:
+  ```yaml
+  primary:
+    nodeSelector:
+      kubernetes.io/hostname: worker1
+
+    persistence:
+      enabled: true
+      storageClass: local-path
+      size: 20Gi
+      accessModes:
+        - ReadWriteOnce
+  ```
+- **Access**:
+  - Internal: `postgresql.database.svc.cluster.local:5432`
+  - External: pgAdmin4 at `https://pgadmin.{{ .Values.domain }}`
+- **Credentials**: Stored in Kubernetes Secret `postgresql` in `database` namespace
+
+### pgAdmin4
+- **File**: `helm/apps/templates/pgadmin4.yaml`
+- **Configuration**:
+  ```yaml
+  persistentVolume:
+    enabled: true
+    storageClass: local-path
+    size: 5Gi
+    accessModes:
+      - ReadWriteOnce
+
+  nodeSelector:
+    kubernetes.io/hostname: worker1
+  ```
+- **Access**: `https://pgadmin.{{ .Values.domain }}`
+- **Default credentials**: `admin@example.com` / `changeme` (请修改)
+
 ## Verification
 
 Check that services are running on the correct nodes:
@@ -119,8 +163,15 @@ kubectl get pod -n monitoring -l app.kubernetes.io/name=prometheus -o wide
 # Check Grafana pod placement
 kubectl get pod -n monitoring -l app.kubernetes.io/name=grafana -o wide
 
+# Check PostgreSQL pod placement
+kubectl get pod -n database -l app.kubernetes.io/name=postgresql -o wide
+
+# Check pgAdmin4 pod placement
+kubectl get pod -n database -l app.kubernetes.io/name=pgadmin4 -o wide
+
 # Verify PVCs are bound
 kubectl get pvc -n monitoring
+kubectl get pvc -n database
 ```
 
 ## Important Notes

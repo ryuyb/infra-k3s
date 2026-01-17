@@ -1,0 +1,57 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgresql
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://charts.bitnami.com/bitnami
+    chart: postgresql
+    targetRevision: 16.5.1
+    helm:
+      releaseName: postgresql
+      values: |
+        auth:
+          enablePostgresUser: true
+          existingSecret: postgresql
+          secretKeys:
+            adminPasswordKey: postgres-password
+
+        primary:
+          nodeSelector:
+            kubernetes.io/hostname: worker1
+
+          persistence:
+            enabled: true
+            storageClass: local-path
+            size: 20Gi
+            accessModes:
+              - ReadWriteOnce
+
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 250m
+            limits:
+              memory: 512Mi
+              cpu: 500m
+
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: database
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

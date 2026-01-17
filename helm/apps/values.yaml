@@ -1,2 +1,7 @@
 # Applications configuration
-# Add your application configurations here
+# Domain will be set by ArgoCD Application parameters
+domain: DOMAIN_PLACEHOLDER
+
+# pgAdmin4 configuration
+pgadmin:
+  email: PGADMIN_EMAIL_PLACEHOLDER

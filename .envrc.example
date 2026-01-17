@@ -21,3 +21,10 @@ export R2_SECRET_ACCESS_KEY=""
 
 # Monitoring
 export GRAFANA_PASSWORD=""
+
+# PostgreSQL
+export POSTGRES_PASSWORD="postgres"
+
+# pgAdmin4
+export PGADMIN_EMAIL="admin@example.com"
+export PGADMIN_PASSWORD="admin"

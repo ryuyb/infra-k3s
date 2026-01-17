@@ -12,6 +12,12 @@ spec:
     repoURL: {{ git_repo_url }}
     targetRevision: HEAD
     path: helm/apps
+    helm:
+      parameters:
+        - name: domain
+          value: {{ domain }}
+        - name: pgadmin.email
+          value: {{ lookup('env', 'PGADMIN_EMAIL') | default('admin@example.com', true) }}
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

@@ -173,6 +173,197 @@ When deploying services that require data persistence:
 
 See [docs/stateful-services.md](docs/stateful-services.md) for the complete list of services and scheduling configurations.
 
+## Adding New Kubernetes Secrets
+
+When adding new services that require secrets (passwords, API tokens, etc.), follow this workflow to ensure secrets are properly managed through environment variables and Ansible automation.
+
+### Step 1: Add Environment Variables
+
+Add the required environment variables to three files:
+
+**1. `.envrc`** - Default values and variable definitions
+```bash
+# Service Name
+export SERVICE_SECRET="${SERVICE_SECRET:-default_value}"
+```
+
+**2. `.envrc.example`** - Example configuration for documentation
+```bash
+# Service Name
+export SERVICE_SECRET="example_value"
+```
+
+**3. `.envrc.local`** - Actual values (gitignored, user-specific)
+```bash
+# Service Name
+export SERVICE_SECRET="actual_secret_value"
+```
+
+### Step 2: Update setup-secrets.yml
+
+Add secret creation tasks to `ansible/playbooks/setup-secrets.yml`:
+
+**2.1 Add namespace variable** (if new namespace needed):
+```yaml
+vars:
+  service_namespace: service-name
+```
+
+**2.2 Add environment variable validation**:
+```yaml
+- name: Check required environment variables
+  ansible.builtin.assert:
+    that:
+      - lookup('env', 'SERVICE_SECRET') != ''
+    fail_msg: "Missing SERVICE_SECRET in .envrc.local"
+```
+
+**2.3 Create namespace** (if needed):
+```yaml
+- name: Create service namespace
+  kubernetes.core.k8s:
+    name: "{{ service_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+```
+
+**2.4 Create secret**:
+```yaml
+- name: Create service secret
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: service-secret
+        namespace: "{{ service_namespace }}"
+      type: Opaque
+      stringData:
+        secret-key: "{{ lookup('env', 'SERVICE_SECRET') }}"
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  no_log: true  # Prevent secrets from appearing in logs
+```
+
+**2.5 Verify secret creation**:
+```yaml
+- name: Verify service secret creation
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Secret
+    name: service-secret
+    namespace: "{{ service_namespace }}"
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: service_secret_info
+
+- name: Display service secret status
+  ansible.builtin.debug:
+    msg: "Service secret created successfully"
+  when: service_secret_info.resources | length > 0
+```
+
+**2.6 Update summary**:
+```yaml
+- name: Display summary
+  ansible.builtin.debug:
+    msg:
+      - "Service: service-secret in {{ service_namespace }}"
+```
+
+### Step 3: Update Helm Templates
+
+Configure the service to use the secret:
+
+**For Helm charts** (`helm/apps/templates/service.yaml` or `helm/infrastructure/templates/service.yaml`):
+```yaml
+auth:
+  existingSecret: service-secret
+  secretKeys:
+    passwordKey: secret-key
+```
+
+**For direct Kubernetes resources**:
+```yaml
+env:
+  - name: SERVICE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: service-secret
+        key: secret-key
+```
+
+### Step 4: Test and Verify
+
+```bash
+# 1. Load environment variables
+direnv allow
+
+# 2. Run setup-secrets playbook
+ansible-playbook ansible/playbooks/setup-secrets.yml
+
+# 3. Verify secret creation
+cd ansible
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl get secret service-secret -n service-namespace -o yaml" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+
+# 4. Verify service is using the secret
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl get pods -n service-namespace" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+```
+
+### Example: PostgreSQL Secret
+
+See the PostgreSQL configuration as a reference implementation:
+
+- **Environment variables**: `.envrc`, `.envrc.example`, `.envrc.local`
+  ```bash
+  export POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-postgres}"
+  ```
+
+- **Secret creation**: `ansible/playbooks/setup-secrets.yml`
+  ```yaml
+  - name: Create PostgreSQL credentials secret
+    kubernetes.core.k8s:
+      state: present
+      definition:
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: postgresql
+          namespace: database
+        type: Opaque
+        stringData:
+          postgres-password: "{{ lookup('env', 'POSTGRES_PASSWORD') }}"
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      no_log: true
+  ```
+
+- **Helm configuration**: `helm/apps/templates/postgresql.yaml`
+  ```yaml
+  auth:
+    enablePostgresUser: true
+    existingSecret: postgresql
+    secretKeys:
+      adminPasswordKey: postgres-password
+  ```
+
+### Best Practices
+
+1. **Never commit secrets to Git**: Use `.envrc.local` (gitignored) for actual values
+2. **Use `no_log: true`**: Prevent secrets from appearing in Ansible logs
+3. **Validate environment variables**: Add assertions in `setup-secrets.yml`
+4. **Use descriptive secret keys**: Name keys clearly (e.g., `postgres-password`, not just `password`)
+5. **Document in CLAUDE.md**: Update this file when adding new secrets
+6. **Update .envrc.example**: Provide clear examples for other developers
+
 ## Troubleshooting
 
 ### Worker Nodes Not Joining Cluster
