@@ -58,6 +58,32 @@ spec:
             volumeMounts:
               - mountPath: /target
                 name: plugins
+
+        schedules:
+          hourly-critical-backup:
+            disabled: false
+            schedule: "0 * * * *"  # Every hour
+            useOwnerReferencesInBackup: false
+            template:
+              includedNamespaces:
+                - "*"
+              labelSelector:
+                matchLabels:
+                  backup: critical
+              storageLocation: default
+              ttl: 168h0m0s  # 7 days
+              defaultVolumesToFsBackup: true
+
+          daily-backup:
+            disabled: false
+            schedule: "0 2 * * *"  # Daily at 2 AM
+            useOwnerReferencesInBackup: false
+            template:
+              includedNamespaces:
+                - "*"
+              storageLocation: default
+              ttl: 720h0m0s  # 30 days
+              defaultVolumesToFsBackup: true
   destination:
     server: https://kubernetes.default.svc
     namespace: velero
