@@ -68,6 +68,32 @@ kubeseal --fetch-cert > sealed-secrets-cert.pem
 
 # Encrypt using local certificate (no cluster connection needed)
 kubeseal --cert sealed-secrets-cert.pem --format yaml < secret.yaml > sealedsecret.yaml
+
+# Execute kubectl commands on master node via Ansible (from ansible/ directory)
+cd ansible
+
+# Check cluster nodes
+ansible 'k3s_masters[0]' -m shell -a "kubectl get nodes" \
+  -e "ansible_shell_executable=/bin/bash" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+
+# Check ArgoCD Applications
+ansible 'k3s_masters[0]' -m shell -a "kubectl get applications -n argocd" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+
+# View all pods
+ansible 'k3s_masters[0]' -m shell -a "kubectl get pods -A" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+
+# Sync ArgoCD Application
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl annotate application infrastructure -n argocd argocd.argoproj.io/refresh=hard --overwrite" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+
+# Describe ArgoCD Application
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl describe application infrastructure -n argocd" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
 ```
 
 ### Disaster Recovery
