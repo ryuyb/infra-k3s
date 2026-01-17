@@ -26,6 +26,3 @@ velero:
   version: 11.3.2
   bucket: VELERO_BUCKET_PLACEHOLDER
   endpoint: R2_ENDPOINT_PLACEHOLDER
-
-gatewayApi:
-  version: 1.2.1

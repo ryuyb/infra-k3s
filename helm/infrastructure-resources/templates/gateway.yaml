@@ -3,11 +3,15 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: traefik
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
 metadata:
   name: traefik
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   controllerName: traefik.io/gateway-controller
 ---
@@ -16,6 +20,8 @@ kind: Gateway
 metadata:
   name: main-gateway
   namespace: traefik
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   gatewayClassName: traefik
   listeners:
@@ -36,6 +42,8 @@ kind: HTTPRoute
 metadata:
   name: http-to-https-redirect
   namespace: traefik
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
 spec:
   parentRefs:
     - name: main-gateway

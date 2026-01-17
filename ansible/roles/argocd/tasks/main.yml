@@ -9,6 +9,32 @@
     state: present
     update_cache: yes
 
+- name: Check if argocd CLI is installed
+  stat:
+    path: /usr/local/bin/argocd
+  register: argocd_cli
+
+- name: Install ArgoCD CLI
+  block:
+    - name: Download ArgoCD CLI
+      get_url:
+        url: https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+        dest: /tmp/argocd
+        mode: '0755'
+
+    - name: Install ArgoCD CLI to /usr/local/bin
+      copy:
+        src: /tmp/argocd
+        dest: /usr/local/bin/argocd
+        mode: '0755'
+        remote_src: yes
+
+    - name: Clean up downloaded file
+      file:
+        path: /tmp/argocd
+        state: absent
+  when: not argocd_cli.stat.exists
+
 - name: Check if helm is installed
   stat:
     path: /usr/local/bin/helm
@@ -34,6 +60,8 @@
 
 - name: Create argocd namespace
   shell: kubectl create namespace {{ argocd_namespace }} --dry-run=client -o yaml | kubectl apply -f -
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false
 
 - name: Add ArgoCD Helm repository
@@ -70,34 +98,30 @@
     helm upgrade --install argocd argo/argo-cd
     --namespace {{ argocd_namespace }}
     --values /tmp/argocd-values.yaml
-    --version {{ argocd_version }}
+    {% if argocd_version %}--version {{ argocd_version }}{% endif %}
     --wait
     --timeout 10m
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   register: argocd_install
   changed_when: "'has been upgraded' in argocd_install.stdout or 'has been installed' in argocd_install.stdout"
 
 - name: Wait for ArgoCD server to be ready
   command: kubectl wait --for=condition=Available --timeout=300s deployment/argocd-server -n {{ argocd_namespace }}
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false
 
-- name: Create temporary directory for manifests
-  tempfile:
-    state: directory
-    suffix: argocd
-  register: temp_dir
+- name: Create infrastructure AppProject
+  template:
+    src: infrastructure-project.yaml.j2
+    dest: /tmp/infrastructure-project.yaml
+    mode: '0644'
 
-- name: Clone repository to get App of Apps manifests
-  git:
-    repo: "{{ git_repo_url }}"
-    dest: "{{ temp_dir.path }}/repo"
-    version: HEAD
-    depth: 1
-
-- name: Create ArgoCD Projects
-  shell: |
-    for file in {{ temp_dir.path }}/repo/kubernetes/bootstrap/argocd/projects/*.yaml; do
-      kubectl apply -f "$file"
-    done
+- name: Apply infrastructure AppProject
+  command: kubectl apply -f /tmp/infrastructure-project.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false
 
 - name: Deploy infrastructure Application
@@ -108,6 +132,8 @@
 
 - name: Apply infrastructure Application
   command: kubectl apply -f /tmp/infrastructure-app.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false
 
 - name: Deploy apps Application
@@ -118,6 +144,32 @@
 
 - name: Apply apps Application
   command: kubectl apply -f /tmp/apps-app.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: false
+
+- name: Deploy infrastructure-resources Application
+  template:
+    src: infrastructure-resources-app.yaml.j2
+    dest: /tmp/infrastructure-resources-app.yaml
+    mode: '0644'
+
+- name: Apply infrastructure-resources Application
+  command: kubectl apply -f /tmp/infrastructure-resources-app.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: false
+
+- name: Install Gateway API CRDs
+  shell: kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/standard-install.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: false
+
+- name: Wait for Gateway API CRDs to be ready
+  shell: kubectl wait --for condition=established --timeout=60s crd/httproutes.gateway.networking.k8s.io
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false
 
 - name: Create ArgoCD HTTPRoute
@@ -128,10 +180,14 @@
 
 - name: Apply ArgoCD HTTPRoute
   command: kubectl apply -f /tmp/argocd-httproute.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false
 
 - name: Get ArgoCD admin password
   shell: kubectl -n {{ argocd_namespace }} get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   register: argocd_password
   changed_when: false
   retries: 10
@@ -143,8 +199,8 @@
     path: "{{ item }}"
     state: absent
   loop:
-    - "{{ temp_dir.path }}"
     - /tmp/argocd-values.yaml
+    - /tmp/infrastructure-project.yaml
     - /tmp/infrastructure-app.yaml
     - /tmp/apps-app.yaml
     - /tmp/argocd-httproute.yaml
@@ -161,5 +217,5 @@
       - "  Password: {{ argocd_password.stdout }}"
       - ""
       - "App of Apps deployed:"
-      - "  - infrastructure: kubernetes/infrastructure"
-      - "  - apps: kubernetes/apps"
+      - "  - infrastructure: helm/infrastructure"
+      - "  - apps: helm/apps"
