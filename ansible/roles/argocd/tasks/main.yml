@@ -90,6 +90,40 @@
       server:
         ingress:
           enabled: false
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+            namespace: argocd
+            labels:
+              prometheus: kube-prometheus
+
+      controller:
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+            namespace: argocd
+            labels:
+              prometheus: kube-prometheus
+
+      repoServer:
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+            namespace: argocd
+            labels:
+              prometheus: kube-prometheus
+
+      applicationSet:
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+            namespace: argocd
+            labels:
+              prometheus: kube-prometheus
     dest: /tmp/argocd-values.yaml
     mode: '0644'
 

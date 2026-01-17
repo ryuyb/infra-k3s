@@ -28,6 +28,7 @@ spec:
         nodeSelector:
           kubernetes.io/hostname: master
 
+        # Datasources
         datasources:
           datasources.yaml:
             apiVersion: 1
@@ -37,6 +38,56 @@ spec:
                 url: http://prometheus-kube-prometheus-prometheus.monitoring:9090
                 access: proxy
                 isDefault: true
+
+        # Dashboard providers
+        dashboardProviders:
+          dashboardproviders.yaml:
+            apiVersion: 1
+            providers:
+              - name: 'default'
+                orgId: 1
+                folder: ''
+                type: file
+                disableDeletion: false
+                editable: true
+                options:
+                  path: /var/lib/grafana/dashboards/default
+
+        # Pre-configured dashboards from Grafana.com
+        dashboards:
+          default:
+            node-exporter:
+              gnetId: 1860
+              revision: 37
+              datasource: Prometheus
+            kubernetes-cluster:
+              gnetId: 7249
+              revision: 1
+              datasource: Prometheus
+            postgresql-database:
+              gnetId: 9628
+              revision: 7
+              datasource: Prometheus
+            argocd:
+              gnetId: 14584
+              revision: 1
+              datasource: Prometheus
+            traefik:
+              gnetId: 4475
+              revision: 5
+              datasource: Prometheus
+
+        # Enable sidecar to auto-load dashboards from ConfigMaps
+        sidecar:
+          dashboards:
+            enabled: true
+            label: grafana_dashboard
+            labelValue: "1"
+            folder: /tmp/dashboards
+            defaultFolderName: "General"
+            searchNamespace: ALL
+            provider:
+              foldersFromFilesStructure: true
 
         service:
           type: ClusterIP

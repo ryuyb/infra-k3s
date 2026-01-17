@@ -15,6 +15,7 @@ spec:
     helm:
       releaseName: prometheus
       values: |
+        # Prometheus configuration
         prometheus:
           prometheusSpec:
             retention: 7d
@@ -28,11 +29,66 @@ spec:
             nodeSelector:
               kubernetes.io/hostname: master
 
+            # Discover ServiceMonitors in all namespaces
+            serviceMonitorNamespaceSelector: {}
+            serviceMonitorSelector: {}
+
+            # Discover PodMonitors in all namespaces
+            podMonitorNamespaceSelector: {}
+            podMonitorSelector: {}
+
+        # Grafana (disabled, using separate deployment)
         grafana:
           enabled: false
 
+        # AlertManager (disabled for now)
         alertmanager:
           enabled: false
+
+        # Kube-state-metrics (collects Kubernetes object state)
+        kube-state-metrics:
+          enabled: true
+
+        # Node exporter (collects node-level metrics)
+        prometheus-node-exporter:
+          enabled: true
+
+        # Kubelet metrics
+        kubelet:
+          enabled: true
+          serviceMonitor:
+            cAdvisor: true  # Container metrics
+            probes: true    # Liveness/readiness probe metrics
+            resource: true  # Resource metrics
+
+        # Kubernetes API server metrics
+        kubeApiServer:
+          enabled: true
+
+        # Kubernetes controller manager metrics
+        kubeControllerManager:
+          enabled: true
+          endpoints:
+            - 127.0.0.1  # K3s runs on localhost
+
+        # Kubernetes scheduler metrics
+        kubeScheduler:
+          enabled: true
+          endpoints:
+            - 127.0.0.1  # K3s runs on localhost
+
+        # Kubernetes etcd metrics (K3s uses embedded etcd)
+        kubeEtcd:
+          enabled: false  # K3s doesn't expose etcd metrics by default
+
+        # CoreDNS metrics
+        coreDns:
+          enabled: true
+
+        # Kube-proxy metrics (K3s doesn't use kube-proxy by default)
+        kubeProxy:
+          enabled: false
+
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

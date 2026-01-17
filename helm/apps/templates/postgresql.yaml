@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: https://charts.bitnami.com/bitnami
     chart: postgresql
-    targetRevision: 16.5.1
+    targetRevision: 18.1.0
     helm:
       releaseName: postgresql
       values: |
@@ -44,6 +44,9 @@ spec:
           enabled: true
           serviceMonitor:
             enabled: true
+            namespace: database
+            labels:
+              prometheus: kube-prometheus
 
   destination:
     server: https://kubernetes.default.svc
