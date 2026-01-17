@@ -1,6 +1,7 @@
 # Infrastructure configuration
 # Domain will be set by ArgoCD Application parameters
 domain: DOMAIN_PLACEHOLDER
+publicDomain: PUBLIC_DOMAIN_PLACEHOLDER
 
 # Component versions (updated 2026-01-16)
 certManager:

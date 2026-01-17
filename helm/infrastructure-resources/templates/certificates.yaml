@@ -39,15 +39,34 @@ spec:
               key: api-token
             email: admin@{{ .Values.domain }}
 ---
+# 公网域名证书
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: wildcard-tls
+  name: public-wildcard-tls
   namespace: cert-manager
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
-  secretName: wildcard-tls
+  secretName: public-wildcard-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - "{{ .Values.publicDomain }}"
+    - "*.{{ .Values.publicDomain }}"
+
+---
+# Tailscale 域名证书
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tailscale-wildcard-tls
+  namespace: cert-manager
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  secretName: tailscale-wildcard-tls
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer

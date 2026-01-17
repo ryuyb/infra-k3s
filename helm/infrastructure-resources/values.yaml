@@ -1,2 +1,3 @@
 # Infrastructure resources configuration
 domain: DOMAIN_PLACEHOLDER
+publicDomain: PUBLIC_DOMAIN_PLACEHOLDER

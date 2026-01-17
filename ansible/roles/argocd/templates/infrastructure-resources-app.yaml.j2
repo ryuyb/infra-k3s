@@ -18,6 +18,8 @@ spec:
       parameters:
         - name: domain
           value: {{ domain }}
+        - name: publicDomain
+          value: {{ public_domain }}
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

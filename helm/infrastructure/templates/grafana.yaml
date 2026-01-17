@@ -117,8 +117,12 @@ spec:
   parentRefs:
     - name: main-gateway
       namespace: traefik
-      sectionName: https
+      sectionName: https-public
+    - name: main-gateway
+      namespace: traefik
+      sectionName: https-tailscale
   hostnames:
+    - "grafana.{{ .Values.publicDomain }}"
     - "grafana.{{ .Values.domain }}"
   rules:
     - matches:
