@@ -115,6 +115,18 @@
             namespace: argocd
             labels:
               prometheus: kube-prometheus
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: metrics
+          initialDelaySeconds: 30
+          timeoutSeconds: 10
+          periodSeconds: 10
+          failureThreshold: 5
+        readinessProbe:
+          initialDelaySeconds: 10
+          timeoutSeconds: 10
+          periodSeconds: 10
 
       applicationSet:
         metrics:
