@@ -29,7 +29,7 @@ velero:
   endpoint: R2_ENDPOINT_PLACEHOLDER
 
 rancher:
-  enabled: false
+  enabled: true
   version: 2.13.1
   replicas: 1
   bootstrapPassword: RANCHER_PASSWORD_PLACEHOLDER
