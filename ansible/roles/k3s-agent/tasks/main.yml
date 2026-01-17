@@ -37,6 +37,10 @@
     K3S_URL: "{{ k3s_server_url }}"
     K3S_TOKEN: "{{ k3s_token }}"
   when: not k3s_binary.stat.exists
+  register: k3s_install_result
+  retries: 3
+  delay: 10
+  until: k3s_install_result.rc == 0
 
 - name: Wait for k3s-agent service to start
   ansible.builtin.service:
