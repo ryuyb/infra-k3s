@@ -22,6 +22,9 @@ export R2_SECRET_ACCESS_KEY=""
 # Monitoring
 export GRAFANA_PASSWORD=""
 
+# Rancher
+export RANCHER_PASSWORD=""
+
 # PostgreSQL
 export POSTGRES_PASSWORD="postgres"
 

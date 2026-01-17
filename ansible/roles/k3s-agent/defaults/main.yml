@@ -1,7 +1,4 @@
 ---
-# Flannel interface (use Tailscale for cross-cloud networking)
-k3s_flannel_iface: tailscale0
-
 # Node labels for workload scheduling
 # Override in host_vars for per-node labels
 k3s_node_labels:

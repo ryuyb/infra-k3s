@@ -121,6 +121,12 @@ ansible 'k3s_masters[0]' -m shell -a \
 
 **Ansible inventory**: Uses public IPs for initial bootstrap, then automatically switches to Tailscale IPs after installation. The `ansible_host` variable dynamically resolves: `{{ tailscale_ip | default(public_ip) }}`
 
+**Tailscale VPN integration**: K3s uses official Tailscale VPN integration (requires K3s v1.27.3+) with `vpn-auth` and `node-external-ip` parameters. This enables:
+- Automatic Tailscale node registration during K3s installation
+- Secure cross-cloud node communication via Tailscale mesh network
+- Automatic subnet route approval for pod CIDR (10.42.0.0/16)
+- No manual flannel interface configuration needed
+
 **Secrets management**:
 - Local dev: direnv (`.envrc`)
 - Ansible: Ansible Vault (`group_vars/all/vault.yml`)
@@ -132,6 +138,12 @@ ansible 'k3s_masters[0]' -m shell -a \
 - Infrastructure components deployed via Helm charts (cert-manager, traefik, external-dns, etc.)
 - `helm/infrastructure/` contains ArgoCD Applications that reference official Helm charts
 - Custom resources (Gateway, HTTPRoutes, ClusterIssuers) managed via Helm templates
+
+**Optional components**: Some infrastructure components can be enabled/disabled via `helm/infrastructure/values.yaml`:
+- Rancher: Set `rancher.enabled: true` to deploy Rancher management UI
+  - Requires `RANCHER_PASSWORD` environment variable
+  - Access via `https://rancher.{{ domain }}`
+  - Default: disabled
 
 **Disaster recovery**: Velero (deployed via Helm) backs up local PVCs to Cloudflare R2. On node failure, workloads restore to another node via DR scripts.
 

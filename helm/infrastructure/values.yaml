@@ -26,3 +26,9 @@ velero:
   version: 11.3.2
   bucket: VELERO_BUCKET_PLACEHOLDER
   endpoint: R2_ENDPOINT_PLACEHOLDER
+
+rancher:
+  enabled: false
+  version: 2.13.1
+  replicas: 1
+  bootstrapPassword: RANCHER_PASSWORD_PLACEHOLDER

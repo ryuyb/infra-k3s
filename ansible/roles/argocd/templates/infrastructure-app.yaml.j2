@@ -22,6 +22,8 @@ spec:
           value: {{ lookup('env', 'R2_ENDPOINT') }}
         - name: grafana.adminPassword
           value: {{ lookup('env', 'GRAFANA_PASSWORD') | default('admin', true) }}
+        - name: rancher.bootstrapPassword
+          value: {{ lookup('env', 'RANCHER_PASSWORD') | default('admin', true) }}
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
