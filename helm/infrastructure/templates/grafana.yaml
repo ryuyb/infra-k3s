@@ -17,6 +17,17 @@ spec:
       values: |
         adminPassword: {{ .Values.grafana.adminPassword }}
 
+        persistence:
+          enabled: true
+          type: pvc
+          storageClassName: local-path
+          accessModes:
+            - ReadWriteOnce
+          size: 5Gi
+
+        nodeSelector:
+          kubernetes.io/hostname: master
+
         datasources:
           datasources.yaml:
             apiVersion: 1

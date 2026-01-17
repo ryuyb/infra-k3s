@@ -13,7 +13,9 @@ Multi-cloud K3s infrastructure managing VPS servers across providers (Hetzner, V
 # Bootstrap VPS (initial setup via public IP)
 ansible-playbook ansible/playbooks/bootstrap.yml
 
-# Deploy K3s cluster
+# Deploy K3s cluster (master + workers)
+# IMPORTANT: Always use k3s-cluster.yml to deploy/update workers
+# Do NOT use k3s-worker.yml directly as it requires variables from k3s-server role
 ansible-playbook ansible/playbooks/k3s-cluster.yml
 
 # Deploy ArgoCD via Helm and GitOps (after K3s is running)
@@ -34,7 +36,7 @@ ansible-playbook ansible/playbooks/maintenance.yml
 ansible-vault edit ansible/inventory/group_vars/all/vault.yml
 
 # One-command cluster initialization (bootstrap + K3s + ArgoCD)
-DOMAIN=yourdomain.com ./scripts/setup/init-cluster.sh --with-argocd
+./scripts/setup/init-cluster.sh --with-argocd
 ```
 
 ### Helm
@@ -144,3 +146,53 @@ deploy-argocd.yml → argocd (runs on k3s_masters[0], installs Helm, deploys Arg
 ### Node Groups
 - `k3s_masters` - Control plane nodes (k3s server)
 - `k3s_workers` - Worker nodes (k3s agent)
+
+## Storage and Node Affinity
+
+### Local Storage Constraints
+
+This cluster uses **local-path** storage (no distributed storage like Longhorn or Ceph). Services with persistent volumes must be pinned to specific nodes.
+
+### Adding Stateful Services
+
+When deploying services that require data persistence:
+
+1. **Ask the user** which node (or node label) to pin the service to
+2. Add scheduling configuration to the service:
+   - **Hostname-based**: `nodeSelector: {kubernetes.io/hostname: <node-name>}`
+   - **Label-based**: `nodeSelector: {<label-key>: <label-value>}`
+   - **Advanced**: Use `affinity.nodeAffinity` for complex rules
+3. **Update docs/stateful-services.md** with:
+   - Service name and namespace
+   - Storage type and size
+   - Scheduling method and configuration
+   - Pinned node(s) or label(s)
+   - Reason for persistence
+
+### Current Pinned Services
+
+See [docs/stateful-services.md](docs/stateful-services.md) for the complete list of services and scheduling configurations.
+
+## Troubleshooting
+
+### Worker Nodes Not Joining Cluster
+
+**Symptom**: All pods running on master node, worker nodes not visible in `kubectl get nodes`
+
+**Common Causes**:
+1. **k3s-agent service failing**: Check service status with `ansible k3s_workers -m shell -a "systemctl status k3s-agent"`
+2. **Missing variables**: Running `k3s-worker.yml` directly fails because `k3s_server_url` and `k3s_token` are set by k3s-server role
+
+**Solution**: Always use `k3s-cluster.yml` to deploy or update worker nodes:
+```bash
+ansible-playbook ansible/playbooks/k3s-cluster.yml
+```
+
+**Verification**:
+```bash
+# Check all nodes are Ready
+kubectl get nodes
+
+# Check pod distribution across nodes
+kubectl get pods -A -o wide
+```

@@ -25,6 +25,8 @@ spec:
                   resources:
                     requests:
                       storage: 10Gi
+            nodeSelector:
+              kubernetes.io/hostname: master
 
         grafana:
           enabled: false
