@@ -46,7 +46,7 @@ metadata:
   name: public-wildcard-tls
   namespace: cert-manager
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   secretName: public-wildcard-tls
   issuerRef:
@@ -64,7 +64,7 @@ metadata:
   name: tailscale-wildcard-tls
   namespace: cert-manager
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   secretName: tailscale-wildcard-tls
   issuerRef:

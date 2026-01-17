@@ -5,7 +5,7 @@ metadata:
   name: main-gateway
   namespace: traefik
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-wave: "3"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   gatewayClassName: traefik
@@ -52,7 +52,7 @@ metadata:
   name: http-to-https-redirect
   namespace: traefik
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "4"
 spec:
   parentRefs:
     - name: main-gateway
