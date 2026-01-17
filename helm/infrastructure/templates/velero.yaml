@@ -35,7 +35,7 @@ spec:
 
         kubectl:
           image:
-            repository: docker.io/bitnami/kubectl
+            repository: docker.io/bitnamilegacy/kubectl
             tag: "1.33.4"
 
         initContainers:
