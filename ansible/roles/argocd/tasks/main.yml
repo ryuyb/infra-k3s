@@ -115,26 +115,6 @@
             namespace: argocd
             labels:
               prometheus: kube-prometheus
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: metrics
-            scheme: HTTP
-          initialDelaySeconds: 30
-          timeoutSeconds: 10
-          periodSeconds: 10
-          successThreshold: 1
-          failureThreshold: 5
-        readinessProbe:
-          httpGet:
-            path: /readyz
-            port: metrics
-            scheme: HTTP
-          initialDelaySeconds: 10
-          timeoutSeconds: 10
-          periodSeconds: 10
-          successThreshold: 1
-          failureThreshold: 3
 
       applicationSet:
         metrics:
@@ -165,19 +145,6 @@
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false
-
-# Workaround: argo-cd chart 9.3.4 automatically adds ?full=true to liveness probe path
-# even when explicitly configured as /healthz in values. This causes timeouts.
-# Remove this task when chart is fixed or upgraded to a version that respects the config.
-- name: Patch repo-server liveness probe (workaround for chart issue)
-  command: >
-    kubectl patch deployment argocd-repo-server -n {{ argocd_namespace }} --type=json
-    -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/livenessProbe/httpGet/path", "value": "/healthz"}]'
-  environment:
-    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-  register: patch_result
-  changed_when: "'patched' in patch_result.stdout"
-  failed_when: patch_result.rc != 0 and 'not patched' not in patch_result.stderr
 
 - name: Create infrastructure AppProject
   template:

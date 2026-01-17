@@ -33,6 +33,20 @@ spec:
         credentials:
           existingSecret: velero-r2-credentials
 
+        # Enable node agent for file-level PVC backups (required for local-path storage)
+        deployNodeAgent: true
+
+        nodeAgent:
+          podVolumePath: /var/lib/kubelet/pods
+          privileged: false
+          resources:
+            requests:
+              memory: 200Mi
+              cpu: 100m
+            limits:
+              memory: 1Gi
+              cpu: 1000m
+
         kubectl:
           image:
             repository: docker.io/bitnamilegacy/kubectl
