@@ -33,6 +33,11 @@ spec:
         credentials:
           existingSecret: velero-r2-credentials
 
+        kubectl:
+          image:
+            repository: docker.io/bitnami/kubectl
+            tag: "1.33.4"
+
         initContainers:
           - name: velero-plugin-for-aws
             image: velero/velero-plugin-for-aws:v1.11.0
