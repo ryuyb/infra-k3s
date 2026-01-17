@@ -17,10 +17,11 @@ ansible-playbook ansible/playbooks/bootstrap.yml
 ansible-playbook ansible/playbooks/k3s-cluster.yml
 
 # Deploy ArgoCD via Helm and GitOps (after K3s is running)
-# Set DOMAIN environment variable for HTTPRoute
-DOMAIN=yourdomain.com ansible-playbook ansible/playbooks/deploy-argocd.yml
+# Automatically creates cluster secrets (Velero R2, Cloudflare API token)
+# Requires environment variables: R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, VELERO_BUCKET, R2_ENDPOINT, CLOUDFLARE_API_TOKEN
+ansible-playbook ansible/playbooks/deploy-argocd.yml
 
-# Setup cluster secrets from environment variables
+# Setup cluster secrets from environment variables (standalone, if needed)
 ansible-playbook ansible/playbooks/setup-secrets.yml
 
 # Upgrade K3s (rolling, one node at a time)

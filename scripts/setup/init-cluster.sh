@@ -19,7 +19,8 @@ Prerequisites:
     - Ansible inventory configured
     - SSH access to all nodes
     - Tailscale authkey in vault
-    - kustomize installed (for ArgoCD deployment)
+    - Environment variables for secrets (if using --with-argocd):
+      R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, VELERO_BUCKET, R2_ENDPOINT, CLOUDFLARE_API_TOKEN
 
 Examples:
     $(basename "$0")
@@ -118,10 +119,12 @@ if [[ "$DEPLOY_ARGOCD" == true ]]; then
     echo ""
     echo "=== Step 4: Deploy ArgoCD and GitOps ==="
 
-    # Check if kustomize is installed
-    if ! command -v kustomize &> /dev/null; then
-        echo "Error: kustomize is not installed" >&2
-        echo "Install with: brew install kustomize" >&2
+    # Check required environment variables
+    if [[ -z "${R2_ACCESS_KEY_ID:-}" ]] || [[ -z "${R2_SECRET_ACCESS_KEY:-}" ]] || \
+       [[ -z "${VELERO_BUCKET:-}" ]] || [[ -z "${R2_ENDPOINT:-}" ]] || \
+       [[ -z "${CLOUDFLARE_API_TOKEN:-}" ]]; then
+        echo "Error: Required environment variables not set" >&2
+        echo "Please set: R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, VELERO_BUCKET, R2_ENDPOINT, CLOUDFLARE_API_TOKEN" >&2
         exit 1
     fi
 

@@ -5,12 +5,16 @@
 # Prerequisites:
 #   - K3s cluster is running
 #   - First master node is accessible
+#   - Environment variables set (R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, VELERO_BUCKET, R2_ENDPOINT, CLOUDFLARE_API_TOKEN)
 #
 # Usage:
-#   DOMAIN=yourdomain.com ansible-playbook ansible/playbooks/deploy-argocd.yml
+#   ansible-playbook ansible/playbooks/deploy-argocd.yml
 
 - name: Deploy ArgoCD to K3s cluster
   hosts: k3s_masters[0]
   become: true
   roles:
     - argocd
+
+- name: Setup cluster secrets
+  import_playbook: setup-secrets.yml
