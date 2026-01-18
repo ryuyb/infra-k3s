@@ -32,7 +32,6 @@ spec:
             exposedPort: 443
             http3:
               enabled: true
-            advertisedPort: 443
 
         providers:
           kubernetesGateway:
