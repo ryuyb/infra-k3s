@@ -7,6 +7,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-compress@kubernetescrd,traefik-secure-headers@kubernetescrd
 spec:
   gatewayClassName: traefik
   listeners:
