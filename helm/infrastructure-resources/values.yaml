@@ -1,2 +1,9 @@
 # Infrastructure resources configuration
 domain: DOMAIN_PLACEHOLDER
+
+# Namespaces that need middleware resources
+middlewareNamespaces:
+  - apps
+  - database
+  - monitoring
+  - cattle-system

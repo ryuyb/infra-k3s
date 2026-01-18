@@ -63,6 +63,16 @@ spec:
             group: traefik.io
             kind: Middleware
             name: compress
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: secure-headers
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: rate-limit
       backendRefs:
         - name: headlamp
           port: 80
