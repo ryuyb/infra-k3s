@@ -15,9 +15,13 @@ spec:
     helm:
       releaseName: kubewall
       values: |
+        tls:
+          secretName: ""
+
         service:
           type: ClusterIP
-          port: 8443
+          port: 8080
+          listen: ":8080"
 
         resources:
           requests:
@@ -59,7 +63,7 @@ spec:
               service:
                 name: kubewall
                 port:
-                  number: 8443
+                  number: 8080
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -77,4 +81,4 @@ spec:
     service:
       name: kubewall
       port:
-        number: 8443
+        number: 8080
