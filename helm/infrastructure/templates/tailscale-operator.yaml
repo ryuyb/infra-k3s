@@ -20,9 +20,6 @@ spec:
         oauth:
           clientId: ""
           clientSecret: ""
-        operatorConfig:
-          image:
-            tag: {{ .Values.tailscaleOperator.version }}
   destination:
     server: https://kubernetes.default.svc
     namespace: tailscale
