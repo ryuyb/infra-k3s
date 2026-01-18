@@ -57,13 +57,6 @@ spec:
         - path:
             type: PathPrefix
             value: /
-      filters:
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: compress
-            namespace: traefik
       backendRefs:
         - name: headlamp
           port: 80
