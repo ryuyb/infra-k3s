@@ -19,9 +19,6 @@ spec:
           type: ClusterIP
           port: 8443
 
-          annotations:
-            traefik.ingress.kubernetes.io/service.serverstransport: apps-kubewall-skip-verify@kubernetescrd
-
         resources:
           requests:
             memory: 128Mi
@@ -29,6 +26,16 @@ spec:
           limits:
             memory: 256Mi
             cpu: 200m
+    kustomize:
+      patches:
+        - target:
+            kind: Service
+            name: kubewall 
+          patch: |-
+            - op: add
+              path: /metadata/annotations
+              value:
+                traefik.ingress.kubernetes.io/service.serverstransport: kubewall-skip-verify@kubernetescrd
 
   destination:
     server: https://kubernetes.default.svc
