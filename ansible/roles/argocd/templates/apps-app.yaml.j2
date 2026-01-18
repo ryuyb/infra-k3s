@@ -16,8 +16,6 @@ spec:
       parameters:
         - name: domain
           value: {{ domain }}
-        - name: publicDomain
-          value: {{ public_domain }}
         - name: pgadmin.email
           value: {{ lookup('env', 'PGADMIN_EMAIL') | default('admin@example.com', true) }}
   destination:

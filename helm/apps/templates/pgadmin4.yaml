@@ -66,12 +66,8 @@ spec:
   parentRefs:
     - name: main-gateway
       namespace: traefik
-      sectionName: https-public
-    - name: main-gateway
-      namespace: traefik
-      sectionName: https-tailscale
+      sectionName: https
   hostnames:
-    - "pgadmin.{{ .Values.publicDomain }}"
     - "pgadmin.{{ .Values.domain }}"
   rules:
     - matches:

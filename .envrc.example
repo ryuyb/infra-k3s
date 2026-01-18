@@ -12,7 +12,6 @@ export CLOUDFLARE_ZONE_ID=""
 # ACME / Let's Encrypt
 export ACME_EMAIL="admin@example.com"
 export DOMAIN="example.com"
-export PUBLIC_DOMAIN="example.com"
 
 # Velero / R2 Backup
 export VELERO_BUCKET="k3s-backups"

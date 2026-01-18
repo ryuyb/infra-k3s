@@ -16,8 +16,6 @@ spec:
       parameters:
         - name: domain
           value: {{ domain }}
-        - name: publicDomain
-          value: {{ public_domain }}
         - name: velero.bucket
           value: {{ lookup('env', 'VELERO_BUCKET') }}
         - name: velero.endpoint

@@ -19,22 +19,8 @@ spec:
         namespaces:
           from: All
 
-    # HTTPS listener - 公网域名
-    - name: https-public
-      protocol: HTTPS
-      port: 443
-      hostname: "*.{{ .Values.publicDomain }}"
-      allowedRoutes:
-        namespaces:
-          from: All
-      tls:
-        mode: Terminate
-        certificateRefs:
-          - name: public-wildcard-tls
-            namespace: cert-manager
-
-    # HTTPS listener - Tailscale 域名
-    - name: https-tailscale
+    # HTTPS listener
+    - name: https
       protocol: HTTPS
       port: 443
       hostname: "*.{{ .Values.domain }}"
@@ -44,7 +30,7 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - name: tailscale-wildcard-tls
+          - name: wildcard-tls
             namespace: cert-manager
 ---
 apiVersion: gateway.networking.k8s.io/v1

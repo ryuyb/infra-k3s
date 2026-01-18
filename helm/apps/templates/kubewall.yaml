@@ -49,7 +49,7 @@ spec:
   parentRefs:
     - name: main-gateway
       namespace: traefik
-      sectionName: https-tailscale
+      sectionName: https
   hostnames:
     - "kubewall.{{ .Values.domain }}"
   rules:

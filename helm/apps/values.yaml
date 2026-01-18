@@ -1,7 +1,6 @@
 # Applications configuration
 # Domain will be set by ArgoCD Application parameters
 domain: DOMAIN_PLACEHOLDER
-publicDomain: PUBLIC_DOMAIN_PLACEHOLDER
 
 # pgAdmin4 configuration
 pgadmin:
