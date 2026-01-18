@@ -376,6 +376,96 @@ See the PostgreSQL configuration as a reference implementation:
 5. **Document in CLAUDE.md**: Update this file when adding new secrets
 6. **Update .envrc.example**: Provide clear examples for other developers
 
+## Managing Application Database Credentials
+
+### Overview
+
+Application database credentials are automatically provisioned through Ansible playbook `setup-secrets-database.yml`. This creates:
+- Dedicated PostgreSQL database per application
+- Dedicated user with minimal privileges (access only to its database)
+- Kubernetes Secret in application namespace
+
+### Adding New Application Database
+
+1. **Update `helm/apps/values.yaml`:**
+   ```yaml
+   appDatabases:
+     - name: myapp
+       database: myapp_db
+       username: myapp_user
+       # namespace is automatically extracted from helm/apps/templates/myapp.yaml
+   ```
+
+2. **Ensure ArgoCD Application definition exists:**
+   ```yaml
+   # helm/apps/templates/myapp.yaml
+   apiVersion: argoproj.io/v1alpha1
+   kind: Application
+   metadata:
+     name: myapp
+   spec:
+     destination:
+       namespace: apps  # This value will be automatically extracted
+   ```
+
+3. **Generate passwords and update Ansible Vault:**
+   ```bash
+   ./scripts/db/generate-passwords.sh
+   ```
+
+4. **Run setup playbook:**
+   ```bash
+   ansible-playbook ansible/playbooks/setup-secrets-database.yml
+   ```
+
+5. **Reference Secret in Helm chart:**
+   ```yaml
+   env:
+     - name: DATABASE_URL
+       valueFrom:
+         secretKeyRef:
+           name: myapp-db
+           key: connection-string
+   ```
+
+### Secret Structure
+
+Each application database Secret contains:
+- `host`: PostgreSQL service FQDN
+- `port`: PostgreSQL port (5432)
+- `database`: Database name
+- `username`: Database user
+- `password`: User password
+- `connection-string`: Full PostgreSQL connection URL
+
+### Password Management
+
+Passwords are:
+- Automatically generated (32-character strong random passwords)
+- Encrypted in Ansible Vault (`ansible/inventory/group_vars/all/vault.yml`)
+- Idempotent (re-running script preserves existing passwords)
+- Shared across team via Vault encryption key
+
+### Verification
+
+```bash
+# Verify database creation
+cd ansible
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl exec -n database postgresql-postgresql-0 -- psql -U postgres -c '\l'" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+
+# Verify user privileges
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl exec -n database postgresql-postgresql-0 -- psql -U postgres -c '\du'" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+
+# Verify Secret creation
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl get secrets -n apps | grep '\-db'" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+```
+
 ## Troubleshooting
 
 ### Worker Nodes Not Joining Cluster

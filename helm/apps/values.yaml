@@ -6,3 +6,15 @@ publicDomain: PUBLIC_DOMAIN_PLACEHOLDER
 # pgAdmin4 configuration
 pgadmin:
   email: PGADMIN_EMAIL_PLACEHOLDER
+
+# Vaultwarden configuration
+vaultwarden:
+  imageTag: 1.34.3-alpine
+
+# PostgreSQL application database configuration
+# Each application gets its own database, user, and Kubernetes Secret
+# Namespace is automatically extracted from helm/apps/templates/{name}.yaml
+appDatabases:
+  - name: vaultwarden
+    database: vaultwarden_db
+    username: vaultwarden_user

@@ -1,0 +1,90 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vaultwarden
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://guerzon.github.io/vaultwarden
+    chart: vaultwarden
+    targetRevision: 0.34.4
+    helm:
+      releaseName: vaultwarden
+      values: |
+        domain: "https://vault.{{ .Values.domain }}"
+
+        image:
+          tag: "{{ .Values.vaultwarden.imageTag }}"
+
+        database:
+          type: postgresql
+          existingSecret: vaultwarden-db
+          existingSecretUserKey: username
+          existingSecretPasswordKey: password
+          host: postgresql-postgresql.database.svc
+          port: 5432
+          dbName: vaultwarden_db
+
+        nodeSelector:
+          kubernetes.io/hostname: worker1
+
+        persistence:
+          enabled: true
+          storageClass: local-path
+          size: 5Gi
+          accessMode: ReadWriteOnce
+
+        resources:
+          requests:
+            memory: 128Mi
+            cpu: 100m
+          limits:
+            memory: 256Mi
+            cpu: 200m
+
+        service:
+          type: ClusterIP
+          port: 80
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apps
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: vaultwarden
+  namespace: apps
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  parentRefs:
+    - name: main-gateway
+      namespace: traefik
+      sectionName: https-public
+    - name: main-gateway
+      namespace: traefik
+      sectionName: https-tailscale
+  hostnames:
+    - "vault.{{ .Values.publicDomain }}"
+    - "vault.{{ .Values.domain }}"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: vaultwarden
+          port: 80
+
