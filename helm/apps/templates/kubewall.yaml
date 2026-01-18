@@ -68,7 +68,7 @@ metadata:
   namespace: apps
   annotations:
     traefik.ingress.kubernetes.io/service.serversscheme: https
-    traefik.ingress.kubernetes.io/service.serverstransport: kubewall-transport
+    traefik.ingress.kubernetes.io/service.serverstransport: kubewall-transport@kubernetescrd
 spec:
   selector:
     app.kubernetes.io/name: kubewall
