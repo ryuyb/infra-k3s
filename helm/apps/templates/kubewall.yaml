@@ -38,28 +38,51 @@ spec:
     syncOptions:
       - CreateNamespace=true
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
   name: kubewall
   namespace: apps
   annotations:
     argocd.argoproj.io/sync-wave: "4"
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
 spec:
-  parentRefs:
-    - name: main-gateway
-      namespace: traefik
-      sectionName: https
-  hostnames:
-    - "kubewall.{{ .Values.domain }}"
+  ingressClassName: traefik
   rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      backendRefs:
-        - name: kubewall
-          port: 8443
+    - host: "kubewall.{{ .Values.domain }}"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kubewall-backend
+                port:
+                  number: 8443
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubewall-backend
+  namespace: apps
+  annotations:
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+    traefik.ingress.kubernetes.io/service.serverstransport: kubewall-transport
+spec:
+  selector:
+    app.kubernetes.io/name: kubewall
+  ports:
+    - port: 8443
+      targetPort: 8443
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: kubewall-transport
+  namespace: apps
+spec:
+  insecureSkipVerify: true
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
