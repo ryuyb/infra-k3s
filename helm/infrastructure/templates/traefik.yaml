@@ -37,6 +37,9 @@ spec:
           kubernetesGateway:
             enabled: true
 
+        additionalArguments:
+          - "--serversTransport.insecureSkipVerify=true"
+
         experimental:
           kubernetesGateway:
             enabled: true
