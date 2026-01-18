@@ -23,11 +23,7 @@ spec:
         database:
           type: postgresql
           existingSecret: vaultwarden-db
-          existingSecretUserKey: username
-          existingSecretPasswordKey: password
-          host: postgresql-postgresql.database.svc
-          port: 5432
-          dbName: vaultwarden_db
+          existingSecretKey: connection-string
 
         nodeSelector:
           kubernetes.io/hostname: worker1
