@@ -15,13 +15,12 @@ spec:
     helm:
       releaseName: kubewall
       values: |
-        tls:
-          secretName: ""
-
         service:
           type: ClusterIP
-          port: 8080
-          listen: ":8080"
+          port: 8443
+
+          annotations:
+            traefik.ingress.kubernetes.io/service.serverstransport: apps-kubewall-skip-verify@kubernetescrd
 
         resources:
           requests:
@@ -41,6 +40,16 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: kubewall-skip-verify
+  namespace: apps
+  annotations:
+    argocd.argoproj.io/sync-wave: "3" 
+spec:
+  insecureSkipVerify: true
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -79,7 +88,7 @@ spec:
             name: rate-limit
       backendRefs:
         - name: kubewall
-          port: 8080
+          port: 8443
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -97,4 +106,4 @@ spec:
     service:
       name: kubewall
       port:
-        number: 8080
+        number: 8443
