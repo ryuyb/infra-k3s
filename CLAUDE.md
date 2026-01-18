@@ -159,7 +159,237 @@ deploy-argocd.yml → argocd (runs on k3s_masters[0], installs Helm, deploys Arg
 - `k3s_masters` - Control plane nodes (k3s server)
 - `k3s_workers` - Worker nodes (k3s agent)
 
+## Tailscale Kubernetes Operator
+
+### Overview
+
+Tailscale Kubernetes Operator 允许将 Kubernetes 服务安全地暴露到 Tailscale 网络，无需公网暴露。通过创建 Ingress 资源，Operator 自动创建 Tailscale 代理设备，并通过 MagicDNS 提供 HTTPS 访问。
+
+### 架构说明
+
+**认证方式**：
+- **K3s 节点**：使用 Auth Key 进行 Tailscale VPN 集成（`vpn-auth` 参数）
+- **Operator**：使用 OAuth Client 创建独立的 Ingress 代理设备
+- 两者互不干扰，各自管理不同的设备类型
+
+**权限配置**：
+- OAuth Client 权限：`Devices: Core`, `Auth Keys: Write`, `Services: Write`
+- OAuth Client Tag：`tag:k8s-operator`
+- Ingress 代理设备 Tag：`tag:k8s`（由 Operator 自动分配）
+
+**部署方式**：
+- Namespace：`tailscale`
+- 部署：Helm Chart + ArgoCD（App of Apps 模式）
+- Sync Wave：`1`（在基础组件之后部署）
+
+### 已暴露服务
+
+| 服务 | Namespace | Tailscale 域名 | 公网访问 |
+|------|-----------|----------------|----------|
+| pgAdmin4 | database | `pgadmin.<tailnet>.ts.net` | 保留（可选删除） |
+
+### 常用命令
+
+```bash
+# 查看 Operator 状态
+cd ansible
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl get pods -n tailscale" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+
+# 查看 Operator 日志
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl logs -n tailscale -l app=tailscale-operator --tail=50" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+
+# 查看所有 Tailscale Ingress
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl get ingress -A -o wide | grep tailscale" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+
+# 查看特定 Ingress 详情
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl describe ingress pgadmin4-tailscale -n database" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+
+# 查看 Tailscale 代理 Pod
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl get pods -n tailscale -l app!=tailscale-operator" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+```
+
+### 添加新服务到 Tailscale 网络
+
+**步骤**：
+
+1. **在服务的 Helm 模板中添加 Tailscale Ingress**：
+
+```yaml
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: <service>-tailscale
+  namespace: <namespace>
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - <hostname>  # MagicDNS 会生成 <hostname>.<tailnet>.ts.net
+  defaultBackend:
+    service:
+      name: <service>
+      port:
+        number: <port>
+```
+
+2. **提交并推送到 Git**：
+
+```bash
+git add helm/apps/templates/<service>.yaml
+git commit -m "feat(tailscale): expose <service> to Tailscale network"
+git push
+```
+
+3. **触发 ArgoCD 同步**：
+
+```bash
+cd ansible
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl annotate application apps -n argocd argocd.argoproj.io/refresh=hard --overwrite" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+```
+
+4. **验证 Ingress 创建**：
+
+```bash
+# 等待 Ingress 分配 IP
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl get ingress <service>-tailscale -n <namespace>" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+
+# 查看 Tailscale 代理 Pod
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl get pods -n tailscale -l app=<service>" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+```
+
+5. **访问服务**：
+   - 确保本地设备已连接到 Tailscale 网络
+   - 在 Tailscale Admin Console 查看新创建的设备（名称类似 `<namespace>-<service>`）
+   - 访问 `https://<hostname>.<tailnet>.ts.net`
+
+**候选服务**：
+- Grafana（监控面板）
+- ArgoCD（GitOps 管理）
+- Kubernetes Dashboard
+
+### 故障排查
+
+#### Ingress 未分配 IP
+
+**症状**：`kubectl get ingress` 显示 ADDRESS 为空
+
+**排查步骤**：
+
+1. **检查 Operator 是否运行**：
+```bash
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl get pods -n tailscale -l app=tailscale-operator" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+```
+
+2. **查看 Operator 日志**：
+```bash
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl logs -n tailscale -l app=tailscale-operator --tail=100" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+```
+
+3. **检查 Ingress 事件**：
+```bash
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl describe ingress <service>-tailscale -n <namespace>" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+```
+
+#### OAuth 权限不足
+
+**症状**：Operator 日志显示权限错误
+
+**解决方案**：
+
+1. 访问 [Tailscale Admin Console](https://login.tailscale.com/admin/settings/oauth)
+2. 检查 OAuth Client 权限是否包含：
+   - ✅ Devices: Core
+   - ✅ Auth Keys: Write
+   - ✅ Services: Write
+3. 检查 OAuth Client 是否分配了 `tag:k8s-operator`
+4. 检查 Tailscale ACL 中是否配置了 tagOwners：
+```json
+"tagOwners": {
+  "tag:k8s-operator": [],
+  "tag:k8s": ["tag:k8s-operator"]
+}
+```
+5. 如果配置不正确，重新生成 OAuth Client
+6. 更新 Ansible Vault：
+```bash
+ansible-vault edit ansible/inventory/group_vars/all/vault.yml
+```
+7. 重新创建 Secret：
+```bash
+ansible-playbook ansible/playbooks/setup-secrets-tailscale.yml
+```
+8. 重启 Operator：
+```bash
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl rollout restart deployment/tailscale-operator -n tailscale" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+```
+
+#### MagicDNS 未启用
+
+**症状**：Ingress 创建后无法解析域名
+
+**解决方案**：
+
+1. 访问 [Tailscale Admin Console](https://login.tailscale.com/admin/dns) → DNS
+2. 启用 MagicDNS
+3. 确认 HTTPS 已启用
+4. 等待 DNS 传播（通常几秒钟）
+
+#### 代理 Pod 无法启动
+
+**症状**：Tailscale 代理 Pod 处于 CrashLoopBackOff 状态
+
+**排查步骤**：
+
+1. **查看 Pod 日志**：
+```bash
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl logs -n tailscale <pod-name>" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+```
+
+2. **检查 Secret 是否存在**：
+```bash
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl get secret operator-oauth -n tailscale" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+```
+
+3. **验证 Secret 内容**：
+```bash
+ansible 'k3s_masters[0]' -m shell -a \
+  "kubectl get secret operator-oauth -n tailscale -o jsonpath='{.data.client_id}' | base64 -d" \
+  -e "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+```
+
 ## Storage and Node Affinity
+
 
 ### Local Storage Constraints
 

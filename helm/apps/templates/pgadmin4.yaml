@@ -77,3 +77,22 @@ spec:
       backendRefs:
         - name: pgadmin4
           port: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pgadmin4-tailscale
+  namespace: database
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - pgadmin
+  defaultBackend:
+    service:
+      name: pgadmin4
+      port:
+        number: 80
+

@@ -5,6 +5,13 @@
   changed_when: false
   ignore_errors: true
 
+- name: Check if tailscale is already configured
+  ansible.builtin.command: "tailscale status"
+  register: tailscale_status
+  changed_when: false
+  ignore_errors: true
+  when: tailscale_existence.rc == 0
+
 - name: Install tailscale
   ansible.builtin.shell: "set -o pipefail && curl -fsSL https://tailscale.com/install.sh | sh"
   args:
@@ -17,7 +24,7 @@
 #   --ssh: Enable Tailscale SSH (access nodes via Tailscale without managing SSH keys)
 #   --netfilter-mode=off: Don't modify iptables (we manage firewall separately)
 #   --accept-dns=false: Don't use Tailscale's DNS (keep system DNS)
-#   --timeout=120s: Wait up to 120s for authentication
+#   --timeout=60s: Wait up to 60s for authentication
 #   --advertise-tags=tag:ansible: Tag node for ACL policies
 #   --auth-key: Pre-authenticated key from Tailscale admin console
 - name: Provision tailscale node
@@ -26,18 +33,22 @@
     --ssh
     --netfilter-mode=off
     --accept-dns=false
-    --timeout=120s
+    --timeout=60s
     --advertise-tags=tag:ansible
     --auth-key={{ tailscale_authkey }}
   register: tailscale_up_result
   become: true
   ignore_errors: true
-  changed_when: tailscale_up_result.rc != 0
+  changed_when: tailscale_up_result.rc == 0
+  when: tailscale_status is not defined or tailscale_status.rc != 0
 
 - name: Fail on tailscale error
   ansible.builtin.fail:
     msg: "Failed to execute tailscale up"
-  when: tailscale_up_result.rc != 0
+  when:
+    - tailscale_up_result is defined
+    - tailscale_up_result.rc is defined
+    - tailscale_up_result.rc != 0
 
 - name: Get tailscale IPv4 address
   ansible.builtin.command: "tailscale ip -4"
@@ -49,7 +60,7 @@
     tailscale_ip: "{{ tailscale_ipv4_result.stdout }}"
 
 - name: Ensure all hosts are reachable via Tailscale
-  ansible.builtin.command: "ping -c 1 -w 60 {{ item }}"
+  ansible.builtin.command: "tailscale ping --c 1 --timeout 10s {{ item }}"
   loop: "{{ hostvars | dict2items | selectattr('value.tailscale_ip', 'defined') | map(attribute='value.tailscale_ip') | list }}"
   changed_when: false
   when: hostvars | dict2items | selectattr('value.tailscale_ip', 'defined') | list | length > 1
