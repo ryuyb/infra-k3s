@@ -6,4 +6,3 @@ middlewareNamespaces:
   - apps
   - database
   - monitoring
-  - cattle-system
