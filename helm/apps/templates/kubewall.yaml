@@ -60,3 +60,21 @@ spec:
       backendRefs:
         - name: kubewall
           port: 8443
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kubewall-tailscale
+  namespace: apps
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - kubewall
+  defaultBackend:
+    service:
+      name: kubewall
+      port:
+        number: 8443
