@@ -13,22 +13,10 @@ spec:
     minResponseBodyBytes: 1024
     encodings:
       - gzip
-      - deflate
       - br
       - zstd
     excludedContentTypes:
       - text/event-stream
-      - image/jpeg
-      - image/png
-      - image/gif
-      - image/webp
-      - image/svg+xml
-      - video/*
-      - audio/*
-      - application/zip
-      - application/gzip
-      - application/x-gzip
-      - application/wasm
 ---
 # Security headers middleware
 apiVersion: traefik.io/v1alpha1
