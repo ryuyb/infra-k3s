@@ -31,3 +31,6 @@ export POSTGRES_PASSWORD="postgres"
 # pgAdmin4
 export PGADMIN_EMAIL="admin@example.com"
 export PGADMIN_PASSWORD="admin"
+
+# Authentik
+export AUTHENTIK_SECRET_KEY=""

@@ -1,0 +1,134 @@
+{{- if .Values.authentik.enabled }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authentik
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://charts.goauthentik.io
+    chart: authentik
+    targetRevision: 2025.12.1
+    helm:
+      releaseName: authentik
+      values: |
+        authentik:
+          secret_key: "{{ .Values.authentik.secretKey }}"
+          postgresql:
+            host: "postgresql.database.svc"
+            name: "file:///postgres-creds/database"
+            user: "file:///postgres-creds/username"
+            password: "file:///postgres-creds/password"
+            port: 5432
+
+        postgresql:
+          enabled: false
+
+        server:
+          volumes:
+            - name: postgres-creds
+              secret:
+                secretName: authentik-db
+          volumeMounts:
+            - name: postgres-creds
+              mountPath: /postgres-creds
+              readOnly: true
+
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 100m
+            limits:
+              memory: 512Mi
+              cpu: 500m
+
+        worker:
+          volumes:
+            - name: postgres-creds
+              secret:
+                secretName: authentik-db
+          volumeMounts:
+            - name: postgres-creds
+              mountPath: /postgres-creds
+              readOnly: true
+
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 100m
+            limits:
+              memory: 512Mi
+              cpu: 500m
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apps
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: authentik
+  namespace: apps
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  parentRefs:
+    - name: main-gateway
+      namespace: traefik
+      sectionName: https
+  hostnames:
+    - "authentik.{{ .Values.domain }}"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: compress
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: secure-headers
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: rate-limit
+      backendRefs:
+        - name: authentik-server
+          port: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: authentik-tailscale
+  namespace: apps
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - authentik
+  defaultBackend:
+    service:
+      name: authentik-server
+      port:
+        number: 80
+{{- end }}

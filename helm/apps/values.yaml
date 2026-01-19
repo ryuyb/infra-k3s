@@ -14,6 +14,15 @@ headlamp:
 kubewall:
   enabled: true
 
+# Authentik configuration
+authentik:
+  enabled: true
+  secretKey: AUTHENTIK_SECRET_KEY_PLACEHOLDER
+
+# Redis configuration
+redis:
+  enabled: false
+
 # Vaultwarden configuration
 vaultwarden:
   imageTag: 1.34.3-alpine
@@ -22,6 +31,9 @@ vaultwarden:
 # Each application gets its own database, user, and Kubernetes Secret
 # Namespace is automatically extracted from helm/apps/templates/{name}.yaml
 appDatabases:
+  - name: authentik
+    database: authentik
+    username: authentik
   - name: vaultwarden
-    database: vaultwarden_db
-    username: vaultwarden_user
+    database: vaultwarden
+    username: vaultwarden
