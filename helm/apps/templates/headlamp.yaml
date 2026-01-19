@@ -39,45 +39,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: headlamp
-  namespace: apps
-  annotations:
-    argocd.argoproj.io/sync-wave: "4"
-spec:
-  parentRefs:
-    - name: main-gateway
-      namespace: traefik
-      sectionName: https
-  hostnames:
-    - "headlamp.{{ .Values.domain }}"
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      filters:
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: compress
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: secure-headers
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: rate-limit
-      backendRefs:
-        - name: headlamp
-          port: 80
----
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

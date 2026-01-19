@@ -110,41 +110,20 @@ spec:
       - CreateNamespace=true
 
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: grafana
+  name: grafana-tailscale
   namespace: monitoring
   annotations:
     argocd.argoproj.io/sync-wave: "4"
 spec:
-  parentRefs:
-    - name: main-gateway
-      namespace: traefik
-      sectionName: https
-  hostnames:
-    - "grafana.{{ .Values.domain }}"
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      filters:
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: compress
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: secure-headers
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: rate-limit
-      backendRefs:
-        - name: grafana
-          port: 80
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - grafana
+  defaultBackend:
+    service:
+      name: grafana
+      port:
+        number: 80

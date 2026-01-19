@@ -25,6 +25,12 @@ spec:
           existingSecret: vaultwarden-db
           existingSecretKey: connection-string
 
+        commonLabels:
+          backup: "critical"
+
+        podLabels:
+          backup: "critical"
+
 {{ if .Values.storageNodeSelector }}
         nodeSelector:
 {{ toYaml .Values.storageNodeSelector | nindent 10 }}

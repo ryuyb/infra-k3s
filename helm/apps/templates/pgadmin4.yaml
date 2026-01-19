@@ -22,6 +22,19 @@ spec:
         env:
           email: "{{ .Values.pgadmin.email }}"
 
+        serverDefinitions:
+          enabled: true
+          resourceType: ConfigMap
+          servers:
+            "1":
+              Name: "postgresql"
+              Group: "Databases"
+              Host: "postgresql.database.svc.cluster.local"
+              Port: 5432
+              MaintenanceDB: "postgres"
+              Username: "postgres"
+              SSLMode: "prefer"
+
         persistentVolume:
           enabled: true
           storageClass: local-path
@@ -56,45 +69,6 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: pgadmin4
-  namespace: database
-  annotations:
-    argocd.argoproj.io/sync-wave: "4"
-spec:
-  parentRefs:
-    - name: main-gateway
-      namespace: traefik
-      sectionName: https
-  hostnames:
-    - "pgadmin.{{ .Values.domain }}"
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      filters:
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: compress
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: secure-headers
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: rate-limit
-      backendRefs:
-        - name: pgadmin4
-          port: 80
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

@@ -21,6 +21,9 @@ spec:
           secretKeys:
             adminPasswordKey: postgres-password
 
+        commonLabels:
+          backup: "critical"
+
         primary:
 {{ if .Values.storageNodeSelector }}
           nodeSelector:
