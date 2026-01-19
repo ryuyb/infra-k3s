@@ -113,7 +113,7 @@
   copy:
     content: |
       global:
-        domain: argocd.{{ domain }}
+        domain: argocd
 
       configs:
         params:
@@ -124,6 +124,7 @@
             url: {{ git_repo_url }}
             type: git
         cm:
+          url: https://argocd
           configManagementPlugins: |
             - name: sops
               generate:
@@ -296,14 +297,14 @@
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false
 
-- name: Create ArgoCD HTTPRoute
+- name: Create ArgoCD Tailscale Ingress
   template:
-    src: httproute.yaml.j2
-    dest: /tmp/argocd-httproute.yaml
+    src: ingress-tailscale.yaml.j2
+    dest: /tmp/argocd-ingress.yaml
     mode: '0644'
 
-- name: Apply ArgoCD HTTPRoute
-  command: kubectl apply -f /tmp/argocd-httproute.yaml
+- name: Apply ArgoCD Tailscale Ingress
+  command: kubectl apply -f /tmp/argocd-ingress.yaml
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false
@@ -329,14 +330,14 @@
     - /tmp/secrets-app.yaml
     - /tmp/infrastructure-app.yaml
     - /tmp/apps-app.yaml
-    - /tmp/argocd-httproute.yaml
+    - /tmp/argocd-ingress.yaml
 
 - name: Display ArgoCD access information
   debug:
     msg:
       - "ArgoCD deployed successfully via Helm!"
       - "Access ArgoCD UI:"
-      - "  Via HTTPRoute: https://argocd.{{ domain }}"
+      - "  Via Tailscale: https://argocd"
       - "  Via port-forward: kubectl port-forward svc/argocd-server -n argocd 8080:443"
       - "  Local URL: https://localhost:8080"
       - "  Username: admin"
