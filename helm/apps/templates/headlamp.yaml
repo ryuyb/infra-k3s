@@ -1,3 +1,4 @@
+{{- if .Values.headlamp.enabled }}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -94,3 +95,4 @@ spec:
       name: headlamp
       port:
         number: 80
+{{- end }}

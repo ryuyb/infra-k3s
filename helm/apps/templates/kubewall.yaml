@@ -1,3 +1,4 @@
+{{- if .Values.kubewall.enabled }}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -94,3 +95,4 @@ spec:
       name: kubewall
       port:
         number: 8443
+{{- end }}

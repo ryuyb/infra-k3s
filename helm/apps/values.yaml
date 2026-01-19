@@ -6,6 +6,14 @@ domain: DOMAIN_PLACEHOLDER
 pgadmin:
   email: PGADMIN_EMAIL_PLACEHOLDER
 
+# Headlamp configuration
+headlamp:
+  enabled: true
+
+# Kubewall configuration
+kubewall:
+  enabled: true
+
 # Vaultwarden configuration
 vaultwarden:
   imageTag: 1.34.3-alpine
