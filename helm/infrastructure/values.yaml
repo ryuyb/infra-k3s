@@ -21,6 +21,10 @@ prometheus:
 grafana:
   version: 10.5.8
 
+# Node selector for local-path PVC workloads (label nodes accordingly)
+storageNodeSelector:
+  node-role.kubernetes.io/storage: "true"
+
 velero:
   version: 11.3.2
   bucket: VELERO_BUCKET_PLACEHOLDER

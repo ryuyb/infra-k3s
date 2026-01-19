@@ -28,9 +28,10 @@ spec:
                   resources:
                     requests:
                       storage: 10Gi
+{{ if .Values.storageNodeSelector }}
             nodeSelector:
-              kubernetes.io/hostname: master
-
+{{ toYaml .Values.storageNodeSelector | nindent 14 }}
+{{ end }}
             # Discover ServiceMonitors in all namespaces
             serviceMonitorNamespaceSelector: {}
             serviceMonitorSelector: {}

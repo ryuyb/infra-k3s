@@ -22,8 +22,10 @@ spec:
             adminPasswordKey: postgres-password
 
         primary:
+{{ if .Values.storageNodeSelector }}
           nodeSelector:
-            kubernetes.io/hostname: worker1
+{{ toYaml .Values.storageNodeSelector | nindent 12 }}
+{{ end }}
 
           persistence:
             enabled: true

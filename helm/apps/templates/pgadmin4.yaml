@@ -29,8 +29,10 @@ spec:
           accessModes:
             - ReadWriteOnce
 
+{{ if .Values.storageNodeSelector }}
         nodeSelector:
-          kubernetes.io/hostname: worker1
+{{ toYaml .Values.storageNodeSelector | nindent 10 }}
+{{ end }}
 
         resources:
           requests:
@@ -111,4 +113,3 @@ spec:
       name: pgadmin4
       port:
         number: 80
-

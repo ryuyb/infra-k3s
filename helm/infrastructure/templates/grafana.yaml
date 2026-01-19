@@ -27,8 +27,10 @@ spec:
             - ReadWriteOnce
           size: 5Gi
 
+{{ if .Values.storageNodeSelector }}
         nodeSelector:
-          kubernetes.io/hostname: master
+{{ toYaml .Values.storageNodeSelector | nindent 10 }}
+{{ end }}
 
         # Datasources
         datasources:
