@@ -64,6 +64,43 @@
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false
 
+- name: Check for local SOPS age key
+  ansible.builtin.stat:
+    path: "{{ argocd_sops_age_key_path }}"
+  delegate_to: localhost
+  become: false
+  register: argocd_sops_age_key_stat
+
+- name: Fail if SOPS age key is missing
+  ansible.builtin.fail:
+    msg: "Missing SOPS age key at {{ argocd_sops_age_key_path }}. Generate it with: age-keygen -o key.txt"
+  when: not argocd_sops_age_key_stat.stat.exists
+
+- name: Install SOPS age key into ArgoCD
+  block:
+    - name: Copy SOPS age key to remote host
+      ansible.builtin.copy:
+        src: "{{ argocd_sops_age_key_path }}"
+        dest: /tmp/argocd-sops-age-key.txt
+        mode: "0600"
+      no_log: true
+
+    - name: Create/update ArgoCD SOPS age secret
+      ansible.builtin.shell: |
+        kubectl -n {{ argocd_namespace }} create secret generic argocd-sops-age \
+          --from-file=key.txt=/tmp/argocd-sops-age-key.txt \
+          --dry-run=client -o yaml | kubectl apply -f -
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      changed_when: false
+      no_log: true
+  always:
+    - name: Remove temporary SOPS age key file
+      ansible.builtin.file:
+        path: /tmp/argocd-sops-age-key.txt
+        state: absent
+      no_log: true
+
 - name: Add ArgoCD Helm repository
   command: helm repo add argo https://argoproj.github.io/argo-helm
   changed_when: false
@@ -86,6 +123,18 @@
           infra-k3s:
             url: {{ git_repo_url }}
             type: git
+        cm:
+          configManagementPlugins: |
+            - name: sops
+              generate:
+                command: ["/bin/sh", "-c"]
+                args:
+                  - |
+                    set -e
+                    find . -type f \( -name '*.sops.yaml' -o -name '*.sops.yml' -o -name '*.sops.json' \) -print0 | while IFS= read -r -d '' file; do
+                      /custom-tools/sops -d "$file"
+                      echo '---'
+                    done
 
       server:
         ingress:
@@ -108,6 +157,35 @@
               prometheus: kube-prometheus
 
       repoServer:
+        env:
+          - name: SOPS_AGE_KEY_FILE
+            value: /var/run/argocd/sops/key.txt
+          - name: PATH
+            value: /custom-tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        volumes:
+          - name: custom-tools
+            emptyDir: {}
+          - name: sops-age-key
+            secret:
+              secretName: argocd-sops-age
+        volumeMounts:
+          - name: custom-tools
+            mountPath: /custom-tools
+          - name: sops-age-key
+            mountPath: /var/run/argocd/sops
+            readOnly: true
+        initContainers:
+          - name: install-sops
+            image: alpine:3.20
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                set -e
+                wget -qO /custom-tools/sops https://github.com/getsops/sops/releases/download/v3.9.0/sops-v3.9.0.linux.amd64
+                chmod +x /custom-tools/sops
+            volumeMounts:
+              - name: custom-tools
+                mountPath: /custom-tools
         metrics:
           enabled: true
           serviceMonitor:
@@ -154,6 +232,18 @@
 
 - name: Apply infrastructure AppProject
   command: kubectl apply -f /tmp/infrastructure-project.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: false
+
+- name: Deploy secrets Application
+  template:
+    src: secrets-app.yaml.j2
+    dest: /tmp/secrets-app.yaml
+    mode: '0644'
+
+- name: Apply secrets Application
+  command: kubectl apply -f /tmp/secrets-app.yaml
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false
@@ -224,6 +314,7 @@
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   register: argocd_password
   changed_when: false
+  no_log: true
   retries: 10
   delay: 5
   until: argocd_password.rc == 0
@@ -235,6 +326,7 @@
   loop:
     - /tmp/argocd-values.yaml
     - /tmp/infrastructure-project.yaml
+    - /tmp/secrets-app.yaml
     - /tmp/infrastructure-app.yaml
     - /tmp/apps-app.yaml
     - /tmp/argocd-httproute.yaml
@@ -248,8 +340,9 @@
       - "  Via port-forward: kubectl port-forward svc/argocd-server -n argocd 8080:443"
       - "  Local URL: https://localhost:8080"
       - "  Username: admin"
-      - "  Password: {{ argocd_password.stdout }}"
+      - "  Password: run 'kubectl -n {{ argocd_namespace }} get secret argocd-initial-admin-secret -o jsonpath=\"{.data.password}\" | base64 -d'"
       - ""
       - "App of Apps deployed:"
+      - "  - secrets: k8s/secrets"
       - "  - infrastructure: helm/infrastructure"
       - "  - apps: helm/apps"

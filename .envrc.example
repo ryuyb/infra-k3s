@@ -16,21 +16,9 @@ export DOMAIN="example.com"
 # Velero / R2 Backup
 export VELERO_BUCKET="k3s-backups"
 export R2_ENDPOINT="https://ACCOUNT_ID.r2.cloudflarestorage.com"
-export R2_ACCESS_KEY_ID=""
-export R2_SECRET_ACCESS_KEY=""
-
-# Monitoring
-export GRAFANA_PASSWORD=""
-
-# Rancher
-export RANCHER_PASSWORD=""
 
 # PostgreSQL
 export POSTGRES_PASSWORD="postgres"
 
 # pgAdmin4
 export PGADMIN_EMAIL="admin@example.com"
-export PGADMIN_PASSWORD="admin"
-
-# Authentik
-export AUTHENTIK_SECRET_KEY=""

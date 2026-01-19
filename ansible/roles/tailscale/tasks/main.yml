@@ -28,18 +28,42 @@
 #   --advertise-tags=tag:ansible: Tag node for ACL policies
 #   --auth-key: Pre-authenticated key from Tailscale admin console
 - name: Provision tailscale node
-  ansible.builtin.command: >-
-    tailscale up
-    --ssh
-    --netfilter-mode=off
-    --accept-dns=false
-    --timeout=60s
-    --advertise-tags=tag:ansible
-    --auth-key={{ tailscale_authkey }}
-  register: tailscale_up_result
-  become: true
-  ignore_errors: true
-  changed_when: tailscale_up_result.rc == 0
+  block:
+    - name: Create temp file for Tailscale auth key
+      ansible.builtin.tempfile:
+        state: file
+        suffix: tailscale_authkey
+      register: tailscale_authkey_file
+      no_log: true
+
+    - name: Write Tailscale auth key to temp file
+      ansible.builtin.copy:
+        dest: "{{ tailscale_authkey_file.path }}"
+        content: "{{ tailscale_authkey }}"
+        mode: "0600"
+      no_log: true
+
+    - name: Run tailscale up
+      ansible.builtin.shell: >-
+        tailscale up
+        --ssh
+        --netfilter-mode=off
+        --accept-dns=false
+        --timeout=60s
+        --advertise-tags=tag:ansible
+        --auth-key="$(cat {{ tailscale_authkey_file.path }})"
+      register: tailscale_up_result
+      become: true
+      ignore_errors: true
+      changed_when: tailscale_up_result.rc == 0
+      no_log: true
+  always:
+    - name: Remove temp Tailscale auth key file
+      ansible.builtin.file:
+        path: "{{ tailscale_authkey_file.path | default('') }}"
+        state: absent
+      no_log: true
+      when: tailscale_authkey_file is defined and tailscale_authkey_file.path is defined
   when: tailscale_status is not defined or tailscale_status.rc != 0
 
 - name: Fail on tailscale error

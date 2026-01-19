@@ -18,8 +18,6 @@ spec:
           value: {{ domain }}
         - name: pgadmin.email
           value: {{ lookup('env', 'PGADMIN_EMAIL') | default('admin@example.com', true) }}
-        - name: authentik.secretKey
-          value: {{ lookup('env', 'AUTHENTIK_SECRET_KEY') | default('', true) }}
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

@@ -4,3 +4,4 @@ argocd_namespace: argocd
 argocd_version: ""
 git_repo_url: "{{ lookup('env', 'GIT_REPO_URL') | default(lookup('pipe', 'git remote get-url origin'), true) }}"
 domain: "{{ lookup('env', 'DOMAIN') | default('example.com', true) }}"
+argocd_sops_age_key_path: "{{ playbook_dir }}/../../key.txt"

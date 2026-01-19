@@ -15,7 +15,9 @@ spec:
     helm:
       releaseName: grafana
       values: |
-        adminPassword: {{ .Values.grafana.adminPassword }}
+        existingSecret: grafana-admin
+        secretKeys:
+          adminPasswordKey: admin-password
 
         persistence:
           enabled: true

@@ -20,7 +20,7 @@ Prerequisites:
     - SSH access to all nodes
     - Tailscale authkey in vault
     - Environment variables for secrets (if using --with-argocd):
-      R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, VELERO_BUCKET, R2_ENDPOINT, CLOUDFLARE_API_TOKEN
+      VELERO_BUCKET, R2_ENDPOINT
 
 Examples:
     $(basename "$0")
@@ -120,11 +120,9 @@ if [[ "$DEPLOY_ARGOCD" == true ]]; then
     echo "=== Step 4: Deploy ArgoCD and GitOps ==="
 
     # Check required environment variables
-    if [[ -z "${R2_ACCESS_KEY_ID:-}" ]] || [[ -z "${R2_SECRET_ACCESS_KEY:-}" ]] || \
-       [[ -z "${VELERO_BUCKET:-}" ]] || [[ -z "${R2_ENDPOINT:-}" ]] || \
-       [[ -z "${CLOUDFLARE_API_TOKEN:-}" ]]; then
+    if [[ -z "${VELERO_BUCKET:-}" ]] || [[ -z "${R2_ENDPOINT:-}" ]]; then
         echo "Error: Required environment variables not set" >&2
-        echo "Please set: R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, VELERO_BUCKET, R2_ENDPOINT, CLOUDFLARE_API_TOKEN" >&2
+        echo "Please set: VELERO_BUCKET, R2_ENDPOINT" >&2
         exit 1
     fi
 

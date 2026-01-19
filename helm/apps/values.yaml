@@ -17,7 +17,6 @@ kubewall:
 # Authentik configuration
 authentik:
   enabled: true
-  secretKey: AUTHENTIK_SECRET_KEY_PLACEHOLDER
 
 # Redis configuration
 redis:

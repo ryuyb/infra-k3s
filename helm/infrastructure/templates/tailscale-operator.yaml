@@ -16,10 +16,6 @@ spec:
     targetRevision: {{ .Values.tailscaleOperator.version }}
     helm:
       releaseName: tailscale-operator
-      values: |
-        oauth:
-          clientId: ""
-          clientSecret: ""
   destination:
     server: https://kubernetes.default.svc
     namespace: tailscale

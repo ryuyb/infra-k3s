@@ -17,7 +17,7 @@ spec:
       releaseName: authentik
       values: |
         authentik:
-          secret_key: "{{ .Values.authentik.secretKey }}"
+          secret_key: "file:///authentik-secret/secret_key"
           postgresql:
             host: "postgresql.database.svc"
             name: "file:///postgres-creds/database"
@@ -33,9 +33,15 @@ spec:
             - name: postgres-creds
               secret:
                 secretName: authentik-db
+            - name: authentik-secret
+              secret:
+                secretName: authentik-secret
           volumeMounts:
             - name: postgres-creds
               mountPath: /postgres-creds
+              readOnly: true
+            - name: authentik-secret
+              mountPath: /authentik-secret
               readOnly: true
 
           resources:
@@ -51,9 +57,15 @@ spec:
             - name: postgres-creds
               secret:
                 secretName: authentik-db
+            - name: authentik-secret
+              secret:
+                secretName: authentik-secret
           volumeMounts:
             - name: postgres-creds
               mountPath: /postgres-creds
+              readOnly: true
+            - name: authentik-secret
+              mountPath: /authentik-secret
               readOnly: true
 
           resources:

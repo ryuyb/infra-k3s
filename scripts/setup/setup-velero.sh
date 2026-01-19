@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Setup Velero with R2 credentials
+# Setup Velero with R2 credentials (SOPS-managed)
 
 show_help() {
     cat << EOF
@@ -17,16 +17,21 @@ Options:
     -h, --help               Show this help message
 
 Environment variables required:
-    R2_ACCESS_KEY_ID         R2 API token ID
-    R2_SECRET_ACCESS_KEY     R2 API token secret
     VELERO_BUCKET            R2 bucket name
     R2_ENDPOINT              R2 endpoint URL
+
+SOPS-managed secrets:
+    k8s/secrets/velero-r2-credentials.sops.yaml
 
 Examples:
     $(basename "$0") --create-secret
     $(basename "$0") --all
 EOF
 }
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+SOPS_VELERO_SECRET_FILE="${SOPS_VELERO_SECRET_FILE:-$PROJECT_ROOT/k8s/secrets/velero-r2-credentials.sops.yaml}"
 
 CREATE_SECRET=false
 INSTALL=false
@@ -64,17 +69,26 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate environment variables
-check_env() {
+require_env() {
     local missing=()
-    [[ -z "${R2_ACCESS_KEY_ID:-}" ]] && missing+=("R2_ACCESS_KEY_ID")
-    [[ -z "${R2_SECRET_ACCESS_KEY:-}" ]] && missing+=("R2_SECRET_ACCESS_KEY")
     [[ -z "${VELERO_BUCKET:-}" ]] && missing+=("VELERO_BUCKET")
     [[ -z "${R2_ENDPOINT:-}" ]] && missing+=("R2_ENDPOINT")
 
     if [[ ${#missing[@]} -gt 0 ]]; then
         echo "Error: Missing environment variables: ${missing[*]}" >&2
         echo "Set these in .envrc.local and run 'direnv allow'" >&2
+        exit 1
+    fi
+}
+
+require_sops_secret() {
+    if ! command -v sops &>/dev/null; then
+        echo "Error: sops is required to decrypt $SOPS_VELERO_SECRET_FILE" >&2
+        exit 1
+    fi
+
+    if [[ ! -f "$SOPS_VELERO_SECRET_FILE" ]]; then
+        echo "Error: Missing SOPS secret file: $SOPS_VELERO_SECRET_FILE" >&2
         exit 1
     fi
 }
@@ -87,19 +101,10 @@ ensure_namespace() {
 # Create R2 credentials secret
 create_secret() {
     echo "Creating velero-r2-credentials secret..."
-    check_env
+    require_sops_secret
 
-    # Delete existing secret if exists
-    kubectl delete secret velero-r2-credentials -n velero 2>/dev/null || true
-
-    # Create credentials file content
-    local creds="[default]
-aws_access_key_id=${R2_ACCESS_KEY_ID}
-aws_secret_access_key=${R2_SECRET_ACCESS_KEY}"
-
-    kubectl create secret generic velero-r2-credentials \
-        --namespace velero \
-        --from-literal=cloud="$creds"
+    # Apply decrypted secret from SOPS
+    sops -d "$SOPS_VELERO_SECRET_FILE" | kubectl apply -f -
 
     echo "Secret created successfully."
 }
@@ -107,13 +112,21 @@ aws_secret_access_key=${R2_SECRET_ACCESS_KEY}"
 # Install Velero
 install_velero() {
     echo "Installing Velero..."
-    check_env
+    require_env
+
+    if ! kubectl -n velero get secret velero-r2-credentials &>/dev/null; then
+        echo "velero-r2-credentials secret not found; creating from SOPS..."
+        create_secret
+    fi
 
     if ! command -v velero &>/dev/null; then
         echo "Error: velero CLI not installed" >&2
         echo "Install with: brew install velero" >&2
         exit 1
     fi
+
+    local creds
+    creds="$(kubectl -n velero get secret velero-r2-credentials -o jsonpath='{.data.cloud}' | base64 -d)"
 
     velero install \
         --provider aws \
@@ -123,9 +136,7 @@ install_velero() {
         --backup-location-config "region=auto,s3ForcePathStyle=true,s3Url=${R2_ENDPOINT}" \
         --use-node-agent \
         --uploader-type=kopia \
-        <<< "[default]
-aws_access_key_id=${R2_ACCESS_KEY_ID}
-aws_secret_access_key=${R2_SECRET_ACCESS_KEY}"
+        <<< "$creds"
 
     echo "Velero installed successfully."
 }
@@ -133,9 +144,6 @@ aws_secret_access_key=${R2_SECRET_ACCESS_KEY}"
 # Apply backup schedules
 apply_schedules() {
     echo "Applying backup schedules..."
-
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
     kubectl apply -f "$PROJECT_ROOT/kubernetes/infrastructure/velero/schedules.yaml"
 
