@@ -76,24 +76,24 @@ if [[ -z "$BACKUP_NAME" ]]; then
     exit 1
 fi
 
-# Build velero command
-CMD="velero backup create $BACKUP_NAME --storage-location $STORAGE --ttl $TTL"
+cmd=(velero backup create "$BACKUP_NAME" --storage-location "$STORAGE" --ttl "$TTL")
 
 if [[ ${#NAMESPACES[@]} -gt 0 ]]; then
-    CMD="$CMD --include-namespaces $(IFS=,; echo "${NAMESPACES[*]}")"
+    cmd+=(--include-namespaces "$(IFS=,; echo "${NAMESPACES[*]}")")
 fi
 
 if [[ ${#LABELS[@]} -gt 0 ]]; then
-    CMD="$CMD --selector $(IFS=,; echo "${LABELS[*]}")"
+    cmd+=(--selector "$(IFS=,; echo "${LABELS[*]}")")
 fi
 
 if [[ "$WAIT" == true ]]; then
-    CMD="$CMD --wait"
+    cmd+=(--wait)
 fi
 
+printf -v cmd_str '%q ' "${cmd[@]}"
 echo "Creating backup: $BACKUP_NAME"
-echo "Command: $CMD"
-eval "$CMD"
+echo "Command: ${cmd_str% }"
+"${cmd[@]}"
 
 echo ""
 echo "Backup created. Check status with:"

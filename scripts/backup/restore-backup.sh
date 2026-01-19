@@ -89,42 +89,42 @@ fi
 # Generate restore name
 RESTORE_NAME="${BACKUP_NAME}-restore-$(date +%Y%m%d-%H%M%S)"
 
-# Build velero command
-CMD="velero restore create $RESTORE_NAME --from-backup $BACKUP_NAME"
+cmd=(velero restore create "$RESTORE_NAME" --from-backup "$BACKUP_NAME")
 
 if [[ -n "$NAMESPACE" ]]; then
-    CMD="$CMD --include-namespaces $NAMESPACE"
+    cmd+=(--include-namespaces "$NAMESPACE")
 fi
 
 if [[ -n "$NS_MAPPING" ]]; then
-    CMD="$CMD --namespace-mappings $NS_MAPPING"
+    cmd+=(--namespace-mappings "$NS_MAPPING")
 fi
 
 if [[ -n "$INCLUDE_RESOURCES" ]]; then
-    CMD="$CMD --include-resources $INCLUDE_RESOURCES"
+    cmd+=(--include-resources "$INCLUDE_RESOURCES")
 fi
 
 if [[ -n "$EXCLUDE_RESOURCES" ]]; then
-    CMD="$CMD --exclude-resources $EXCLUDE_RESOURCES"
+    cmd+=(--exclude-resources "$EXCLUDE_RESOURCES")
 fi
 
 if [[ "$RESTORE_PVS" == true ]]; then
-    CMD="$CMD --restore-volumes"
+    cmd+=(--restore-volumes)
 fi
 
 if [[ "$WAIT" == true ]]; then
-    CMD="$CMD --wait"
+    cmd+=(--wait)
 fi
 
+printf -v cmd_str '%q ' "${cmd[@]}"
 echo "Restoring from backup: $BACKUP_NAME"
 echo "Restore name: $RESTORE_NAME"
-echo "Command: $CMD"
+echo "Command: ${cmd_str% }"
 echo ""
 read -p "Continue? [y/N] " -n 1 -r
 echo ""
 
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    eval "$CMD"
+    "${cmd[@]}"
     echo ""
     echo "Restore initiated. Check status with:"
     echo "  velero restore describe $RESTORE_NAME"

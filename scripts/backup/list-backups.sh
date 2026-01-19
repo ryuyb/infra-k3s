@@ -59,17 +59,25 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-CMD="velero backup get"
-
-if [[ "$JSON" == true ]]; then
-    CMD="$CMD -o json"
-fi
+cmd=(velero backup get)
 
 if [[ -n "$LABEL" ]]; then
-    CMD="$CMD --selector $LABEL"
+    cmd+=(--selector "$LABEL")
 fi
 
-eval "$CMD"
+if [[ "$JSON" == true ]]; then
+    cmd+=(-o json)
+    if [[ "$SHOW_ALL" == false ]]; then
+        echo "Note: JSON output is always unfiltered; --all has no effect." >&2
+    fi
+    "${cmd[@]}"
+else
+    if [[ "$SHOW_ALL" == true ]]; then
+        "${cmd[@]}"
+    else
+        "${cmd[@]}" | awk 'NR==1 || ($2 != "Failed" && $2 != "PartiallyFailed")'
+    fi
+fi
 
 if [[ "$JSON" != true ]]; then
     echo ""
