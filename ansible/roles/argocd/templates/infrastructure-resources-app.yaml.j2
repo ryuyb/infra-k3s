@@ -18,6 +18,8 @@ spec:
       parameters:
         - name: domain
           value: {{ domain }}
+        - name: externalDnsTargets
+          value: "{{ external_dns_targets }}"
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
