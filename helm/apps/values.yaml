@@ -32,11 +32,12 @@ storageNodeSelector:
 
 # PostgreSQL application database configuration
 # Each application gets its own database, user, and Kubernetes Secret
-# Namespace is automatically extracted from helm/apps/templates/{name}.yaml
 appDatabases:
   - name: authentik
     database: authentik
     username: authentik
+    namespace: apps
   - name: vaultwarden
     database: vaultwarden
     username: vaultwarden
+    namespace: apps
