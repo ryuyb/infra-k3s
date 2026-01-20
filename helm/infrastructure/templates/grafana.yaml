@@ -15,6 +15,10 @@ spec:
     helm:
       releaseName: grafana
       values: |
+        grafana.ini:
+          server:
+            enable_gzip: true
+
         existingSecret: grafana-admin
         secretKeys:
           adminPasswordKey: admin-password
