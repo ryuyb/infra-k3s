@@ -28,7 +28,7 @@ vaultwarden:
 
 # Node selector for stateful workloads (label nodes accordingly)
 storageNodeSelector:
-  node-role.kubernetes.io/storage: "true"
+  storage-node: "true"
 
 # PostgreSQL application database configuration
 # Each application gets its own database, user, and Kubernetes Secret

@@ -23,3 +23,11 @@ disable:
 
 # Write kubeconfig with correct permissions
 write-kubeconfig-mode: "0644"
+
+# Node labels for scheduling
+{% if k3s_node_labels %}
+node-label:
+{% for label in k3s_node_labels %}
+  - {{ label }}
+{% endfor %}
+{% endif %}

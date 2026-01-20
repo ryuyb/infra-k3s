@@ -11,6 +11,7 @@ traefik:
 
 externalDns:
   version: 1.20.0
+  defaultTargets: ""
 
 sealedSecrets:
   version: 2.18.0
@@ -23,7 +24,7 @@ grafana:
 
 # Node selector for local-path PVC workloads (label nodes accordingly)
 storageNodeSelector:
-  node-role.kubernetes.io/storage: "true"
+  storage-node: "true"
 
 velero:
   version: 11.3.2

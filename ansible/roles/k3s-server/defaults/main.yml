@@ -5,5 +5,8 @@ k3s_disable_traefik: true
 # Extra TLS SANs for API server certificate
 k3s_tls_san_extra: []
 
+# Node labels for scheduling
+k3s_node_labels: []
+
 # Fetch kubeconfig to local machine after install
 k3s_fetch_kubeconfig: true
