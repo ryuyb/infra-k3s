@@ -89,17 +89,7 @@ spec:
           extensionRef:
             group: traefik.io
             kind: Middleware
-            name: compress
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: secure-headers
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: rate-limit
+            name: secure-chain
       backendRefs:
         - name: vaultwarden
           port: 80
