@@ -31,6 +31,11 @@ spec:
           - gateway-httproute
           - service
 
+{{ if .Values.externalDns.defaultTargets }}
+        extraArgs:
+          - "--default-targets={{ .Values.externalDns.defaultTargets }}"
+{{ end }}
+
         policy: sync
         registry: txt
         txtOwnerId: k3s-cluster

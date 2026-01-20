@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cmp-cm
+  namespace: {{ argocd_namespace }}
+data:
+  sops.yaml: |
+    apiVersion: argoproj.io/v1alpha1
+    kind: ConfigManagementPlugin
+    metadata:
+      name: sops
+    spec:
+      generate:
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            set -e
+            for file in $(find . -type f \( -name '*.sops.yaml' -o -name '*.sops.yml' -o -name '*.sops.json' \)); do
+              /custom-tools/sops -d "$file"
+              echo '---'
+            done

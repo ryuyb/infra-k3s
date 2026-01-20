@@ -1,2 +1,3 @@
 ---
 # tailscale_authkey should be set in vault
+tailscale_hostname: "{{ inventory_hostname }}"

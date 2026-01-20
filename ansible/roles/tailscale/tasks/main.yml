@@ -64,7 +64,7 @@
         state: absent
       no_log: true
       when: tailscale_authkey_file is defined and tailscale_authkey_file.path is defined
-  when: tailscale_status is not defined or tailscale_status.rc != 0
+  when: tailscale_status is not defined or (tailscale_status.rc | default(1)) != 0
 
 - name: Fail on tailscale error
   ansible.builtin.fail:
@@ -73,6 +73,28 @@
     - tailscale_up_result is defined
     - tailscale_up_result.rc is defined
     - tailscale_up_result.rc != 0
+
+- name: Read Tailscale status (JSON)
+  ansible.builtin.command: "tailscale status --json"
+  register: tailscale_status_json
+  changed_when: false
+  failed_when: false
+  when:
+    - tailscale_hostname is defined
+    - (tailscale_status is defined and (tailscale_status.rc | default(1)) == 0) or (tailscale_up_result is defined and (tailscale_up_result.rc | default(1)) == 0)
+
+- name: Set current Tailscale hostname fact
+  ansible.builtin.set_fact:
+    tailscale_hostname_current: "{{ (tailscale_status_json.stdout | default('{}') | from_json).Self.HostName | default('') }}"
+  when: tailscale_status_json is defined
+
+- name: Set Tailscale hostname
+  ansible.builtin.command: "tailscale set --hostname {{ tailscale_hostname }}"
+  changed_when: false
+  when:
+    - tailscale_hostname is defined
+    - (tailscale_status is defined and (tailscale_status.rc | default(1)) == 0) or (tailscale_up_result is defined and (tailscale_up_result.rc | default(1)) == 0)
+    - tailscale_hostname_current is not defined or tailscale_hostname_current != tailscale_hostname
 
 - name: Get tailscale IPv4 address
   ansible.builtin.command: "tailscale ip -4"

@@ -109,6 +109,61 @@
   command: helm repo update
   changed_when: false
 
+- name: Initialize external-dns node list
+  ansible.builtin.set_fact:
+    external_dns_nodes: []
+
+- name: Select external-dns nodes by label
+  ansible.builtin.set_fact:
+    external_dns_nodes: "{{ external_dns_nodes + [item] }}"
+  loop: "{{ groups['k3s_masters'] + groups['k3s_workers'] }}"
+  when: "'external-dns=public' in (hostvars[item].k3s_node_labels | default([]))"
+
+- name: Gather facts for external-dns nodes
+  ansible.builtin.setup:
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  loop: "{{ external_dns_nodes }}"
+  when: external_dns_nodes | length > 0
+
+- name: Initialize external-dns target list
+  ansible.builtin.set_fact:
+    external_dns_targets_list: []
+
+- name: Add IPv4 targets from inventory
+  ansible.builtin.set_fact:
+    external_dns_targets_list: "{{ external_dns_targets_list + [hostvars[item].ansible_host] }}"
+  loop: "{{ external_dns_nodes }}"
+  when: hostvars[item].ansible_host is defined
+
+- name: Add IPv6 targets from facts
+  ansible.builtin.set_fact:
+    external_dns_targets_list: "{{ external_dns_targets_list + [ipv6_target] }}"
+  vars:
+    ipv6_target: >-
+      {{
+        (hostvars[item].ansible_facts.default_ipv6.address
+          if (hostvars[item].ansible_facts is defined and
+              hostvars[item].ansible_facts.default_ipv6 is defined and
+              hostvars[item].ansible_facts.default_ipv6.address is defined)
+          else
+            (
+              hostvars[item].ansible_facts.all_ipv6_addresses | default([])
+              | reject('match', '^fe80:')
+              | reject('equalto', '::1')
+              | list
+              | first
+              | default('')
+            )
+        )
+      }}
+  loop: "{{ external_dns_nodes }}"
+  when: ipv6_target != ''
+
+- name: Finalize external-dns targets
+  ansible.builtin.set_fact:
+    external_dns_targets: "{{ external_dns_targets_list | unique | join(',') }}"
+
 - name: Create ArgoCD Helm values file
   copy:
     content: |
@@ -125,17 +180,6 @@
             type: git
         cm:
           url: https://argocd
-          configManagementPlugins: |
-            - name: sops
-              generate:
-                command: ["/bin/sh", "-c"]
-                args:
-                  - |
-                    set -e
-                    find . -type f \( -name '*.sops.yaml' -o -name '*.sops.yml' -o -name '*.sops.json' \) -print0 | while IFS= read -r -d '' file; do
-                      /custom-tools/sops -d "$file"
-                      echo '---'
-                    done
 
       server:
         ingress:
@@ -169,6 +213,9 @@
           - name: sops-age-key
             secret:
               secretName: argocd-sops-age
+          - name: cmp-plugin
+            configMap:
+              name: argocd-cmp-cm
         volumeMounts:
           - name: custom-tools
             mountPath: /custom-tools
@@ -182,11 +229,39 @@
             args:
               - |
                 set -e
-                wget -qO /custom-tools/sops https://github.com/getsops/sops/releases/download/v3.9.0/sops-v3.9.0.linux.amd64
+                arch="$(uname -m)"
+                case "$arch" in
+                  x86_64|amd64) sops_arch="amd64" ;;
+                  aarch64|arm64) sops_arch="arm64" ;;
+                  *) echo "Unsupported architecture: $arch" >&2; exit 1 ;;
+                esac
+                wget -qO /custom-tools/sops https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.${sops_arch}
                 chmod +x /custom-tools/sops
             volumeMounts:
               - name: custom-tools
                 mountPath: /custom-tools
+        extraContainers:
+          - name: sops-cmp
+            image: {{ argocd_cmp_image }}
+            command: ["/var/run/argocd/argocd-cmp-server"]
+            env:
+              - name: SOPS_AGE_KEY_FILE
+                value: /var/run/argocd/sops/key.txt
+              - name: PATH
+                value: /custom-tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+            volumeMounts:
+              - name: var-files
+                mountPath: /var/run/argocd
+              - name: plugins
+                mountPath: /home/argocd/cmp-server/plugins
+              - name: cmp-plugin
+                mountPath: /home/argocd/cmp-server/config/plugin.yaml
+                subPath: sops.yaml
+              - name: custom-tools
+                mountPath: /custom-tools
+              - name: sops-age-key
+                mountPath: /var/run/argocd/sops
+                readOnly: true
         metrics:
           enabled: true
           serviceMonitor:
@@ -205,6 +280,18 @@
               prometheus: kube-prometheus
     dest: /tmp/argocd-values.yaml
     mode: '0644'
+
+- name: Create ArgoCD CMP plugin configmap
+  template:
+    src: argocd-cmp-cm.yaml.j2
+    dest: /tmp/argocd-cmp-cm.yaml
+    mode: '0644'
+
+- name: Apply ArgoCD CMP plugin configmap
+  command: kubectl apply -f /tmp/argocd-cmp-cm.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: false
 
 - name: Install ArgoCD via Helm
   command: >
@@ -326,6 +413,7 @@
     state: absent
   loop:
     - /tmp/argocd-values.yaml
+    - /tmp/argocd-cmp-cm.yaml
     - /tmp/infrastructure-project.yaml
     - /tmp/secrets-app.yaml
     - /tmp/infrastructure-app.yaml

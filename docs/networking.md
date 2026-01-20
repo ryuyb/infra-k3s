@@ -23,17 +23,19 @@ All cluster communication uses Tailscale's encrypted mesh network. Each node get
 └──────────────┘     └──────────────┘     └──────────────┘
 ```
 
-## IP Resolution
+## Ansible Host Resolution
 
-Ansible dynamically resolves connection IPs:
+Ansible uses `ansible_host`/`ansible_user` from the inventory for SSH. In this repo,
+those values are sourced from vaulted maps in `ansible/inventory/group_vars/all/vault.yml`.
 
 ```yaml
-# inventory/group_vars/all.yml
-ansible_host: "{{ tailscale_ip | default(public_ip) }}"
+# ansible/inventory/hosts.yml
+ansible_host: "{{ vault_ansible_hosts['master-1'] }}"
+ansible_user: "{{ vault_ansible_users['master-1'] }}"
 ```
 
-- **Bootstrap**: Uses `public_ip` (Tailscale not yet installed)
-- **Post-bootstrap**: Uses `tailscale_ip` (secure mesh)
+Update `vault_ansible_hosts` and `vault_ansible_users` when adding or changing nodes
+(public IP during bootstrap is typical, then switch to the Tailscale IP if desired).
 
 ## Firewall Rules
 

@@ -20,6 +20,8 @@ spec:
           value: {{ lookup('env', 'VELERO_BUCKET') }}
         - name: velero.endpoint
           value: {{ lookup('env', 'R2_ENDPOINT') }}
+        - name: externalDns.defaultTargets
+          value: "{{ external_dns_targets }}"
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

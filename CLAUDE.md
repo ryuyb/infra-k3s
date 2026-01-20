@@ -119,7 +119,7 @@ ansible 'k3s_masters[0]' -m shell -a \
 
 ### Key Patterns
 
-**Ansible inventory**: Uses public IPs for initial bootstrap, then automatically switches to Tailscale IPs after installation. The `ansible_host` variable dynamically resolves: `{{ tailscale_ip | default(public_ip) }}`
+**Ansible inventory**: Uses `ansible_host`/`ansible_user` per node for SSH, sourced from vaulted maps (`vault_ansible_hosts`, `vault_ansible_users`). Set them to reachable IP/hostname (often public IP during bootstrap), then update to the Tailscale IP if desired.
 
 **Tailscale VPN integration**: K3s uses official Tailscale VPN integration (requires K3s v1.27.3+) with `vpn-auth` and `node-external-ip` parameters. This enables:
 - Automatic Tailscale node registration during K3s installation

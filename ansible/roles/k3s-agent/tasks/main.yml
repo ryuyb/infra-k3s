@@ -30,7 +30,12 @@
 
 - name: Install k3s agent
   ansible.builtin.shell: |
-    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" sh -
+    set -o pipefail
+    if command -v timeout &> /dev/null; then
+      timeout 300s sh -c 'curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" sh -'
+    else
+      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" sh -
+    fi
   args:
     executable: /bin/bash
   environment:
@@ -38,9 +43,23 @@
     K3S_TOKEN: "{{ k3s_token }}"
   when: not k3s_binary.stat.exists
   register: k3s_install_result
-  retries: 3
-  delay: 10
-  until: k3s_install_result.rc == 0
+  changed_when: k3s_install_result.rc == 0
+  failed_when: false
+
+- name: Re-check k3s-agent binary after install
+  ansible.builtin.stat:
+    path: /usr/local/bin/k3s
+  register: k3s_binary_after
+  when: not k3s_binary.stat.exists
+
+- name: Fail if k3s agent install did not complete
+  ansible.builtin.fail:
+    msg: "k3s agent install did not complete successfully"
+  when:
+    - not k3s_binary.stat.exists
+    - k3s_binary_after.stat.exists is not defined or not k3s_binary_after.stat.exists
+    - k3s_install_result is defined
+    - k3s_install_result.rc != 0
 
 - name: Wait for k3s-agent service to start
   ansible.builtin.service:

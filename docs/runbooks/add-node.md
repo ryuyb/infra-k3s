@@ -17,14 +17,18 @@ Add node to `ansible/inventory/hosts.yml`:
 k3s_workers:
   hosts:
     new-worker:
-      public_ip: 1.2.3.4
-      ansible_user: root
+      ansible_host: "{{ vault_ansible_hosts['new-worker'] }}"
+      ansible_user: "{{ vault_ansible_users['new-worker'] }}"
 ```
+
+Update `ansible/inventory/group_vars/all/vault.yml` with the node's connection
+details (public IP during bootstrap; switch to the Tailscale IP after the node
+joins the mesh if desired).
 
 ### 2. Bootstrap Node
 
 ```bash
-# Run bootstrap playbook (uses public IP)
+# Run bootstrap playbook
 ansible-playbook ansible/playbooks/bootstrap.yml -l new-worker
 ```
 
