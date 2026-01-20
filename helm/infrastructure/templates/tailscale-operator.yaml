@@ -16,6 +16,9 @@ spec:
     targetRevision: {{ .Values.tailscaleOperator.version }}
     helm:
       releaseName: tailscale-operator
+      values: |
+        proxyConfig:
+          defaultProxyClass: tailscale-ingress
   destination:
     server: https://kubernetes.default.svc
     namespace: tailscale
@@ -26,3 +29,16 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+
+---
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyClass
+metadata:
+  name: tailscale-ingress
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  statefulSet:
+    pod:
+      nodeSelector:
+        tailscale-proxy: "true"
