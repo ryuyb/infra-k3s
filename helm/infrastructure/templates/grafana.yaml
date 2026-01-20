@@ -19,9 +19,10 @@ spec:
           server:
             enable_gzip: true
 
-        existingSecret: grafana-admin
-        secretKeys:
-          adminPasswordKey: admin-password
+        admin:
+          existingSecret: grafana-admin
+          userKey: admin-user
+          passwordKey: admin-password
 
         persistence:
           enabled: true
