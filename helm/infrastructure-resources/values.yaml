@@ -6,6 +6,7 @@ externalDnsTargets: ""
 
 # Namespaces that need middleware resources
 middlewareNamespaces:
+  - argocd
   - apps
   - database
   - monitoring
