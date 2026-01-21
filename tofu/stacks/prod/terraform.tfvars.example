@@ -1,0 +1,7 @@
+# Authentik Configuration
+authentik_url   = "https://authentik.example.com"
+authentik_token = "your-authentik-api-token"
+
+# Kubewall Configuration
+kubewall_external_host = "https://kubewall.example.com"
+kubewall_internal_host = "http://kubewall.apps.svc.cluster.local:8080"
