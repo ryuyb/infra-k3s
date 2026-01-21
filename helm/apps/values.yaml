@@ -8,7 +8,7 @@ pgadmin:
 
 # Headlamp configuration
 headlamp:
-  enabled: true
+  enabled: false
 
 # Kubewall configuration
 kubewall:

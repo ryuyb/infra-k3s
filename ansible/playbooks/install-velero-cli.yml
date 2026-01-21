@@ -1,0 +1,63 @@
+---
+# Install Velero CLI on K3s master node
+# Usage: ansible-playbook ansible/playbooks/install-velero-cli.yml
+- name: Install Velero CLI
+  hosts: k3s_masters[0]
+  become: true
+  gather_facts: true
+
+  vars:
+    velero_version: "v1.17.2"
+    velero_arch: "{{ 'amd64' if ansible_facts.architecture == 'x86_64' else 'arm64' }}"
+
+  tasks:
+    - name: Check if Velero CLI is already installed
+      ansible.builtin.command: velero version --client-only
+      register: velero_check
+      changed_when: false
+      failed_when: false
+
+    - name: Display current Velero version if installed
+      ansible.builtin.debug:
+        msg: "Velero CLI already installed: {{ velero_check.stdout }}"
+      when: velero_check.rc == 0
+
+    - name: Download Velero CLI
+      ansible.builtin.get_url:
+        url: "https://github.com/vmware-tanzu/velero/releases/download/{{ velero_version }}/velero-{{ velero_version }}-linux-{{ velero_arch }}.tar.gz"
+        dest: "/tmp/velero-{{ velero_version }}-linux-{{ velero_arch }}.tar.gz"
+        mode: "0644"
+      when: velero_check.rc != 0
+
+    - name: Extract Velero CLI
+      ansible.builtin.unarchive:
+        src: "/tmp/velero-{{ velero_version }}-linux-{{ velero_arch }}.tar.gz"
+        dest: "/tmp"
+        remote_src: true
+      when: velero_check.rc != 0
+
+    - name: Install Velero CLI binary
+      ansible.builtin.copy:
+        src: "/tmp/velero-{{ velero_version }}-linux-{{ velero_arch }}/velero"
+        dest: "/usr/local/bin/velero"
+        mode: "0755"
+        remote_src: true
+      when: velero_check.rc != 0
+
+    - name: Clean up downloaded files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/velero-{{ velero_version }}-linux-{{ velero_arch }}.tar.gz"
+        - "/tmp/velero-{{ velero_version }}-linux-{{ velero_arch }}"
+      when: velero_check.rc != 0
+
+    - name: Verify Velero CLI installation
+      ansible.builtin.command: velero version --client-only
+      register: velero_version_output
+      changed_when: false
+
+    - name: Display Velero CLI version
+      ansible.builtin.debug:
+        msg: "{{ velero_version_output.stdout }}"
