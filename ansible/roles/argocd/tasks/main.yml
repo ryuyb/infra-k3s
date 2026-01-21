@@ -384,17 +384,17 @@
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false
 
-- name: Create ArgoCD Tailscale Ingress
-  template:
-    src: ingress-tailscale.yaml.j2
-    dest: /tmp/argocd-ingress.yaml
-    mode: '0644'
+#- name: Create ArgoCD Tailscale Ingress
+#  template:
+#    src: ingress-tailscale.yaml.j2
+#    dest: /tmp/argocd-ingress.yaml
+#    mode: '0644'
 
-- name: Apply ArgoCD Tailscale Ingress
-  command: kubectl apply -f /tmp/argocd-ingress.yaml
-  environment:
-    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-  changed_when: false
+#- name: Apply ArgoCD Tailscale Ingress
+#  command: kubectl apply -f /tmp/argocd-ingress.yaml
+#  environment:
+#    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+#  changed_when: false
 
 - name: Get ArgoCD admin password
   shell: kubectl -n {{ argocd_namespace }} get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
@@ -418,7 +418,7 @@
     - /tmp/secrets-app.yaml
     - /tmp/infrastructure-app.yaml
     - /tmp/apps-app.yaml
-    - /tmp/argocd-ingress.yaml
+#    - /tmp/argocd-ingress.yaml
 
 - name: Display ArgoCD access information
   debug:

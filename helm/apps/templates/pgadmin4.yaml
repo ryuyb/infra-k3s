@@ -70,20 +70,49 @@ spec:
     syncOptions:
       - CreateNamespace=true
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
 metadata:
-  name: pgadmin4-tailscale
-  namespace: database
+  name: pgadmin4
+  namespace: apps
   annotations:
     argocd.argoproj.io/sync-wave: "4"
 spec:
-  ingressClassName: tailscale
-  tls:
-    - hosts:
-        - pgadmin
-  defaultBackend:
-    service:
-      name: pgadmin4
-      port:
-        number: 80
+  parentRefs:
+    - name: main-gateway
+      namespace: traefik
+      sectionName: https
+  hostnames:
+    - "pgadmin.{{ .Values.domain }}"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: secure-chain
+      backendRefs:
+        - name: pgadmin4
+          port: 80
+#---
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: pgadmin4-tailscale
+#  namespace: database
+#  annotations:
+#    argocd.argoproj.io/sync-wave: "4"
+#spec:
+#  ingressClassName: tailscale
+#  tls:
+#    - hosts:
+#        - pgadmin
+#  defaultBackend:
+#    service:
+#      name: pgadmin4
+#      port:
+#        number: 80
