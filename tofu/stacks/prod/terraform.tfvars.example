@@ -5,3 +5,7 @@ authentik_token = "your-authentik-api-token"
 # Kubewall Configuration
 kubewall_external_host = "https://kubewall.example.com"
 kubewall_internal_host = "http://kubewall.apps.svc.cluster.local:8080"
+
+# Argo CD Configuration
+argocd_external_host = ""
+argocd_internal_host = ""

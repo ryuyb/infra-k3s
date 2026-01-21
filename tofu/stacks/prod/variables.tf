@@ -14,7 +14,7 @@ variable "kubewall_external_host" {
   type        = string
 }
 
-variable "kubewall_internal_host" {
-  description = "Internal URL for Kubewall (e.g., http://kubewall.apps.svc.cluster.local:8080)"
+variable "argocd_external_host" {
+  description = "External URL for Argo CD (e.g., https://argocd.example.com)"
   type        = string
 }

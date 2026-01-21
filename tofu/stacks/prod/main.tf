@@ -22,7 +22,21 @@ module "kubewall_proxy" {
   name          = "Kubewall"
   slug          = "kubewall"
   external_host = var.kubewall_external_host
-  internal_host = var.kubewall_internal_host
+  mode          = "forward_single"
+  group         = "Infrastructure"
+
+  # Use default authorization and invalidation flows
+  authorization_flow_slug = "default-provider-authorization-implicit-consent"
+  invalidation_flow_slug  = "default-provider-invalidation-flow"
+}
+
+# Argocd Proxy Provider
+module "argocd_proxy" {
+  source = "../../modules/authentik-provider-proxy"
+
+  name          = "Argo CD"
+  slug          = "argocd"
+  external_host = var.argocd_external_host
   mode          = "forward_single"
   group         = "Infrastructure"
 
