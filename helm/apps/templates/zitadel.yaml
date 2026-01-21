@@ -35,42 +35,42 @@ spec:
                   Username: postgres
                   SSL:
                     Mode: disable
-          env:
-            - name: ZITADEL_DATABASE_POSTGRES_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: zitadel-db
-                  key: host
-            - name: ZITADEL_DATABASE_POSTGRES_PORT
-              valueFrom:
-                secretKeyRef:
-                  name: zitadel-db
-                  key: port
-            - name: ZITADEL_DATABASE_POSTGRES_DATABASE
-              valueFrom:
-                secretKeyRef:
-                  name: zitadel-db
-                  key: database
-            - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: zitadel-db
-                  key: username
-            - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: zitadel-db
-                  key: password
-            - name: ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: postgresql
-                  key: postgres-username
-            - name: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: postgresql
-                  key: postgres-password
+        env:
+          - name: ZITADEL_DATABASE_POSTGRES_HOST
+            valueFrom:
+              secretKeyRef:
+                name: zitadel-db
+                key: host
+          - name: ZITADEL_DATABASE_POSTGRES_PORT
+            valueFrom:
+              secretKeyRef:
+                name: zitadel-db
+                key: port
+          - name: ZITADEL_DATABASE_POSTGRES_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: zitadel-db
+                key: database
+          - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: zitadel-db
+                key: username
+          - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: zitadel-db
+                key: password
+          - name: ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: postgresql
+                key: postgres-username
+          - name: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: postgresql
+                key: postgres-password
 
   destination:
     server: https://kubernetes.default.svc
