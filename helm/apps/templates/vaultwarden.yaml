@@ -17,7 +17,7 @@ spec:
       values: |
         domain: "https://vault.{{ .Values.domain }}"
         sendsAllowed: true
-        signupsAllowed: true
+        signupsAllowed: false
         signupsVerify: true
         invitationsAllowed: true
         emergencyAccessAllowed: true

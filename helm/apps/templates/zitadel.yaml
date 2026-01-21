@@ -1,0 +1,113 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: zitadel
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: charts.zitadel.com
+    chart: zitadel
+    targetRevision: 9.16.0
+    helm:
+      releaseName: zitadel
+      values: |
+        zitadel:
+          masterkeySecretName: zitadel-master-key
+          configmapConfig:
+            ExternalSecure: true
+            ExternalDomain: zitadel.{{ .Values.domain }}
+            TLS:
+              Enabled: false
+            Database:
+              Postgres:
+                MaxOpenConns: 20
+                MaxIdleConns: 10
+                MaxConnLifetime: 30m
+                MaxConnIdleTime: 5m
+                User:
+                  SSL:
+                    Mode: disable
+                Admin:
+                  Username: postgres
+                  SSL:
+                    Mode: disable
+          env:
+            - name: ZITADEL_DATABASE_POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: zitadel-db
+                  key: host
+            - name: ZITADEL_DATABASE_POSTGRES_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: zitadel-db
+                  key: port
+            - name: ZITADEL_DATABASE_POSTGRES_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: zitadel-db
+                  key: database
+            - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: zitadel-db
+                  key: username
+            - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: zitadel-db
+                  key: password
+            - name: ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql
+                  key: postgres-username
+            - name: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql
+                  key: postgres-password
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apps
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: zitadel
+  namespace: apps
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  parentRefs:
+    - name: main-gateway
+      namespace: traefik
+      sectionName: https
+  hostnames:
+    - "zitadel.{{ .Values.domain }}"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: secure-chain
+      backendRefs:
+        - name: zitadel
+          port: 8080

@@ -37,6 +37,10 @@ appDatabases:
     database: authentik
     username: authentik
     namespace: apps
+  - name: zitadel
+    database: zitadel
+    username: zitadel
+    namespace: apps
   - name: vaultwarden
     database: vaultwarden
     username: vaultwarden
