@@ -9,7 +9,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: charts.zitadel.com
+    repoURL: https://charts.zitadel.com
     chart: zitadel
     targetRevision: 9.16.0
     helm:
