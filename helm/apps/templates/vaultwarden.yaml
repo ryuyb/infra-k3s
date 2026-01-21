@@ -16,6 +16,13 @@ spec:
       releaseName: vaultwarden
       values: |
         domain: "https://vault.{{ .Values.domain }}"
+        sendsAllowed: true
+        signupsAllowed: true
+        signupsVerify: true
+        invitationsAllowed: true
+        emergencyAccessAllowed: true
+        emailChangeAllowed: true
+        showPassHint: true
 
         image:
           tag: "{{ .Values.vaultwarden.imageTag }}"
@@ -24,6 +31,20 @@ spec:
           type: postgresql
           existingSecret: vaultwarden-db
           existingSecretKey: connection-string
+        
+        pushNotifications:
+          enabled: true
+          existingSecret: vaultwarden-push
+          installationId:
+            existingSecretKey: installationId
+          installationKey:
+            existingSecretKey: installationKey
+          relayUri: https://push.bitwarden.com
+          identityUri: https://identity.bitwarden.com
+        
+        adminToken:
+          existingSecret: vaultwarden-admin-token
+          existingSecretKey: token
 
         commonLabels:
           backup: "critical"
