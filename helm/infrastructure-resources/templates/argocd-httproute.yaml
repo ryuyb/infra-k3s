@@ -1,0 +1,29 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: argocd
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  parentRefs:
+    - name: main-gateway
+      namespace: traefik
+      sectionName: https
+  hostnames:
+    - "argocd.{{ .Values.domain }}"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: secure-chain
+      backendRefs:
+        - name: argocd-server
+          port: 443
