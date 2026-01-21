@@ -82,32 +82,32 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: zitadel
-  namespace: apps
-  annotations:
-    argocd.argoproj.io/sync-wave: "4"
-spec:
-  parentRefs:
-    - name: main-gateway
-      namespace: traefik
-      sectionName: https
-  hostnames:
-    - "zitadel.{{ .Values.domain }}"
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      filters:
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: secure-chain
-      backendRefs:
-        - name: zitadel
-          port: 8080
+#---
+#apiVersion: gateway.networking.k8s.io/v1
+#kind: HTTPRoute
+#metadata:
+#  name: zitadel
+#  namespace: apps
+#  annotations:
+#    argocd.argoproj.io/sync-wave: "4"
+#spec:
+#  parentRefs:
+#    - name: main-gateway
+#      namespace: traefik
+#      sectionName: https
+#  hostnames:
+#    - "zitadel.{{ .Values.domain }}"
+#  rules:
+#    - matches:
+#        - path:
+#            type: PathPrefix
+#            value: /
+#      filters:
+#        - type: ExtensionRef
+#          extensionRef:
+#            group: traefik.io
+#            kind: Middleware
+#            name: secure-chain
+#      backendRefs:
+#        - name: zitadel
+#          port: 8080
