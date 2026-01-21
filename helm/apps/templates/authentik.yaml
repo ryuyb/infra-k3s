@@ -29,6 +29,8 @@ spec:
           enabled: false
 
         server:
+          readinessProbe:
+            timeoutSeconds: 5
           volumes:
             - name: postgres-creds
               secret:
