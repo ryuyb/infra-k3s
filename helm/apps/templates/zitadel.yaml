@@ -55,6 +55,12 @@ spec:
                 LoginClient:
                   Machine:
                     Username: 'zitadel-machine-login-client'
+              PasswordComplexityPolicy:
+                MinLength: 8
+                HasLowercase: true
+                HasUppercase: false
+                HasNumber: true
+                HasSymbol: false
         login:
           service:
             appProtocol: http
