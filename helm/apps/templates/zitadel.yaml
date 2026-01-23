@@ -112,8 +112,8 @@ spec:
             kind: Middleware
             name: secure-chain
       backendRefs:
-        - name: zitadel
-          port: 8080
+        - name: zitadel-login
+          port: 3000
     - matches:
         - path:
             type: PathPrefix
@@ -125,7 +125,7 @@ spec:
             kind: Middleware
             name: secure-chain
       backendRefs:
-        - name: zitadel-login
-          port: 3000
+        - name: zitadel
+          port: 8080
 
 # https://github.com/zitadel/zitadel/issues/10712#issuecomment-3738100159
