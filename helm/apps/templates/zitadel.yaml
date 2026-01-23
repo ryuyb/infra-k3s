@@ -45,7 +45,7 @@ spec:
                   FirstName: ZITADEL
                   LastName: Admin
                   Email:
-                    Address: admin@.{{ .Values.domain }}
+                    Address: admin@{{ .Values.domain }}
                     Verified: true
                   PreferredLanguage: en
                 Machine:
