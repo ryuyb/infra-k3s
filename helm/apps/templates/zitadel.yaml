@@ -37,7 +37,7 @@ spec:
                     Mode: disable
             FirstInstance:
               InstanceName: ZITADEL
-              DefaultLanguage: en
+              DefaultLanguage: zh
               Org:
                 Name: ZITADEL
                 Human:
@@ -47,7 +47,8 @@ spec:
                   Email:
                     Address: admin@{{ .Values.domain }}
                     Verified: true
-                  PreferredLanguage: en
+                  PreferredLanguage: zh
+                  PasswordChangeRequired: false
                 Machine:
                   Machine:
                     Username: 'zitadel-machine-iam-admin'
@@ -93,7 +94,7 @@ spec:
               secretKeyRef:
                 name: postgresql
                 key: postgres-password
-          - name: ZITADEL_DEFAULTINSTANCE_ORG_HUMAN_PASSWORD
+          - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: zitadel-default-human
