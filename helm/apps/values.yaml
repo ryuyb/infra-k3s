@@ -16,7 +16,7 @@ kubewall:
 
 # Authentik configuration
 authentik:
-  enabled: true
+  enabled: false
 
 # Redis configuration
 redis:
@@ -24,7 +24,7 @@ redis:
 
 # Vaultwarden configuration
 vaultwarden:
-  imageTag: 1.34.3-alpine
+  imageTag: 1.35.2-alpine
 
 # Node selector for stateful workloads (label nodes accordingly)
 storageNodeSelector:
