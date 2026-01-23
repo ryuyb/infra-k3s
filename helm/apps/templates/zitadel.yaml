@@ -35,7 +35,7 @@ spec:
                   Username: postgres
                   SSL:
                     Mode: disable
-            DefaultInstance:
+            FirstInstance:
               InstanceName: ZITADEL
               DefaultLanguage: en
               Org:
@@ -48,6 +48,12 @@ spec:
                     Address: admin@.{{ .Values.domain }}
                     Verified: true
                   PreferredLanguage: en
+                Machine:
+                  Machine:
+                    Username: 'zitadel-machine-iam-admin'
+                LoginClient:
+                  Machine:
+                    Username: 'zitadel-machine-login-client'
         login:
           service:
             appProtocol: http
