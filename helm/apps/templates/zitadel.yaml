@@ -35,6 +35,19 @@ spec:
                   Username: postgres
                   SSL:
                     Mode: disable
+            DefaultInstance:
+              InstanceName: ZITADEL
+              DefaultLanguage: en
+              Org:
+                Name: ZITADEL
+                Human:
+                  UserName: admin
+                  FirstName: ZITADEL
+                  LastName: Admin
+                  Email:
+                    Address: admin@.{{ .Values.domain }}
+                    Verified: true
+                  PreferredLanguage: en
         login:
           service:
             appProtocol: http
@@ -74,6 +87,11 @@ spec:
               secretKeyRef:
                 name: postgresql
                 key: postgres-password
+          - name: ZITADEL_DEFAULTINSTANCE_ORG_HUMAN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: zitadel-default-human
+                key: password
 
   destination:
     server: https://kubernetes.default.svc
