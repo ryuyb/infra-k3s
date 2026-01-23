@@ -35,6 +35,9 @@ spec:
                   Username: postgres
                   SSL:
                     Mode: disable
+        login:
+          service:
+            appProtocol: http
         env:
           - name: ZITADEL_DATABASE_POSTGRES_HOST
             valueFrom:
