@@ -101,7 +101,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /
+            value: /ui/v2/login
       filters:
         - type: ExtensionRef
           extensionRef:
@@ -111,5 +111,18 @@ spec:
       backendRefs:
         - name: zitadel
           port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: secure-chain
+      backendRefs:
+        - name: zitadel-login
+          port: 3000
 
 # https://github.com/zitadel/zitadel/issues/10712#issuecomment-3738100159
