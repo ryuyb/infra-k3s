@@ -100,15 +100,15 @@ spec:
                 name: zitadel-default-human
                 key: password
           - name: ZITADEL_DEFAULTINSTANCE_PASSWORDCOMPLEXITYPOLICY_MINLENGTH
-            value: 8
+            value: "8"
           - name: ZITADEL_DEFAULTINSTANCE_PASSWORDCOMPLEXITYPOLICY_HASLOWERCASE
-            value: true
+            value: "true"
           - name: ZITADEL_DEFAULTINSTANCE_PASSWORDCOMPLEXITYPOLICY_HASUPPERCASE
-            value: false
+            value: "false"
           - name: ZITADEL_DEFAULTINSTANCE_PASSWORDCOMPLEXITYPOLICY_HASNUMBER
-            value: true
+            value: "true"
           - name: ZITADEL_DEFAULTINSTANCE_PASSWORDCOMPLEXITYPOLICY_HASSYMBOL
-            value: false
+            value: "false"
 
   destination:
     server: https://kubernetes.default.svc
