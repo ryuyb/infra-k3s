@@ -6,3 +6,10 @@ argocd_cmp_image: "quay.io/argoproj/argocd"
 git_repo_url: "{{ lookup('env', 'GIT_REPO_URL') | default(lookup('pipe', 'git remote get-url origin'), true) }}"
 domain: "{{ lookup('env', 'DOMAIN') | default('example.com', true) }}"
 argocd_sops_age_key_path: "{{ playbook_dir }}/../../key.txt"
+
+# OIDC Configuration
+argocd_oidc_enabled: "{{ lookup('env', 'ARGOCD_OIDC_ENABLED') | default('false', true) }}"
+argocd_oidc_issuer_url: "{{ lookup('env', 'ARGOCD_OIDC_ISSUER_URL') | default('', true) }}"
+argocd_oidc_client_id: "{{ lookup('env', 'ARGOCD_OIDC_CLIENT_ID') | default('', true) }}"
+argocd_oidc_client_secret: "{{ lookup('env', 'ARGOCD_OIDC_CLIENT_SECRET') | default('', true) }}"
+argocd_oidc_logout_url: "{{ lookup('env', 'ARGOCD_OIDC_LOGOUT_URL') | default('', true) }}"

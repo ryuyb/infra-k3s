@@ -23,6 +23,10 @@ ansible-playbook ansible/playbooks/k3s-cluster.yml
 # Requires environment variables: VELERO_BUCKET, R2_ENDPOINT
 ansible-playbook ansible/playbooks/deploy-argocd.yml
 
+# Deploy ArgoCD with OIDC authentication
+# Set ARGOCD_OIDC_ENABLED=true and configure OIDC credentials in .envrc.local
+ansible-playbook ansible/playbooks/deploy-argocd.yml
+
 # Setup cluster secrets from environment variables (standalone, if needed)
 ansible-playbook ansible/playbooks/setup-secrets.yml
 
@@ -106,6 +110,117 @@ ansible 'k3s_masters[0]' -m shell -a \
 ./scripts/dr/failover.sh --source-node vps-aws-1 --target-node vps-vultr-1
 ./scripts/dr/restore-workload.sh --app myapp --backup latest --target-node vps-vultr-1
 ```
+
+## ArgoCD OIDC Configuration
+
+### Overview
+
+ArgoCD supports OIDC authentication via ZITADEL (or other OIDC providers). When enabled, users can log in using their ZITADEL credentials instead of the default admin password.
+
+### Configuration
+
+**1. Enable OIDC in environment variables:**
+
+Set `ARGOCD_OIDC_ENABLED=true` in your `.envrc.local` file:
+
+```bash
+# ArgoCD OIDC Configuration
+export ARGOCD_OIDC_ENABLED="true"
+export ARGOCD_OIDC_ISSUER_URL="https://zitadel.your-domain.com"
+export ARGOCD_OIDC_CLIENT_ID="227060711795262483@argocd-project"
+export ARGOCD_OIDC_CLIENT_SECRET="your-client-secret"
+export ARGOCD_OIDC_LOGOUT_URL="https://zitadel.your-domain.com/oidc/v1/end_session"
+```
+
+**2. Deploy ArgoCD:**
+
+```bash
+direnv allow
+ansible-playbook ansible/playbooks/deploy-argocd.yml
+```
+
+### RBAC Configuration
+
+The ArgoCD RBAC configuration is defined in `ansible/roles/argocd/templates/argocd-values.yaml.j2`:
+
+```yaml
+configs:
+  rbac:
+    policy.csv: |
+      g, argocd_administrators, role:admin
+      g, argocd_users, role:readonly
+    policy.default: ''
+    scopes: '[groups]'
+```
+
+**RBAC Groups:**
+- `argocd_administrators`: Full admin access (role:admin)
+- `argocd_users`: Read-only access (role:readonly)
+
+**Scopes:**
+- `scopes: '[groups]'` - Maps OIDC groups to ArgoCD RBAC groups
+
+### ZITADEL Client Setup
+
+To create an OIDC client in ZITADEL:
+
+1. **Access ZITADEL Console:**
+   ```bash
+   # Port-forward to access ZITADEL
+   kubectl port-forward svc/zitadel -n apps 8080:8080
+   # Access at http://localhost:8080
+   ```
+
+2. **Create OIDC Application:**
+   - Go to Projects → Your Project → Applications
+   - Click "Create Application"
+   - Select "OIDC Web Application"
+   - Configure:
+     - **Application Name**: `argocd`
+     - **Redirect URIs**: `https://argocd.your-domain.com/auth/callback`
+     - **Post Logout Redirect URIs**: `https://argocd.your-domain.com`
+     - **Token Response Type**: Code
+     - **Grant Types**: Authorization Code, Refresh Token
+     - **Code Method**: PKCE (recommended)
+     - **Auth Method**: Basic (Client Secret)
+
+3. **Get Credentials:**
+   - Copy the **Client ID** and **Client Secret**
+   - Note the **Issuer URL** (usually `https://zitadel.your-domain.com`)
+
+### Verification
+
+After deployment, verify OIDC is working:
+
+```bash
+# Check ArgoCD ConfigMap
+kubectl get cm argocd-cm -n argocd -o yaml
+
+# Check ArgoCD RBAC ConfigMap
+kubectl get cm argocd-rbac-cm -n argocd -o yaml
+
+# Test OIDC login
+# Access ArgoCD UI via Tailscale: https://argocd
+# Click "LOG IN VIA OIDC" button
+```
+
+### Troubleshooting
+
+**OIDC login button not appearing:**
+- Verify `ARGOCD_OIDC_ENABLED=true` is set
+- Check ArgoCD ConfigMap: `kubectl get cm argocd-cm -n argocd -o yaml`
+- Ensure OIDC client is properly configured in ZITADEL
+
+**OIDC authentication fails:**
+- Verify `issuer` URL is correct
+- Check client ID and secret match ZITADEL configuration
+- Ensure redirect URI matches exactly: `https://argocd.your-domain.com/auth/callback`
+- Check ZITADEL logs: `kubectl logs -n apps -l app=zitadel`
+
+**RBAC groups not working:**
+- Verify OIDC groups are included in the token
+- Check `scopes: '[groups]'` is configured
+- Verify group names match `argocd_administrators` or `argocd_users`
 
 ## Architecture
 

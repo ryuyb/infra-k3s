@@ -1,0 +1,9 @@
+zitadel_domain = ""
+
+zitadel_access_token = ""
+
+zitadel_default_org_id = ""
+
+zitadel_default_user_id = ""
+
+argocd_domain = ""

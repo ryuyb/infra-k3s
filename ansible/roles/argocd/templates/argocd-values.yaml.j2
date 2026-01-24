@@ -1,0 +1,131 @@
+global:
+  domain: argocd
+
+configs:
+  params:
+    server.insecure: true
+
+  repositories:
+    infra-k3s:
+      url: {{ git_repo_url }}
+      type: git
+  cm:
+    url: https://argocd
+{% if argocd_oidc_enabled == 'true' %}
+    admin.enabled: "false"
+    oidc.config: |
+      name: Zitadel
+      issuer: {{ argocd_oidc_issuer_url }}
+      clientID: "{{ argocd_oidc_client_id }}"
+      clientSecret: {{ argocd_oidc_client_secret }}
+      requestedScopes:
+        - openid
+        - profile
+        - email
+        - groups
+      logoutURL: {{ argocd_oidc_logout_url }}
+{% endif %}
+  rbac:
+    policy.csv: |
+      g, argocd_administrators, role:admin
+      g, argocd_users, role:readonly
+    policy.default: ''
+    scopes: '[groups]'
+
+server:
+  ingress:
+    enabled: false
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      namespace: argocd
+      labels:
+        prometheus: kube-prometheus
+
+controller:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      namespace: argocd
+      labels:
+        prometheus: kube-prometheus
+
+repoServer:
+  env:
+    - name: SOPS_AGE_KEY_FILE
+      value: /var/run/argocd/sops/key.txt
+    - name: PATH
+      value: /custom-tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  volumes:
+    - name: custom-tools
+      emptyDir: {}
+    - name: sops-age-key
+      secret:
+        secretName: argocd-sops-age
+    - name: cmp-plugin
+      configMap:
+        name: argocd-cmp-cm
+  volumeMounts:
+    - name: custom-tools
+      mountPath: /custom-tools
+    - name: sops-age-key
+      mountPath: /var/run/argocd/sops
+      readOnly: true
+  initContainers:
+    - name: install-sops
+      image: alpine:3.20
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          set -e
+          arch="$(uname -m)"
+          case "$arch" in
+            x86_64|amd64) sops_arch="amd64" ;;
+            aarch64|arm64) sops_arch="arm64" ;;
+            *) echo "Unsupported architecture: $arch" >&2; exit 1 ;;
+          esac
+          wget -qO /custom-tools/sops https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.${sops_arch}
+          chmod +x /custom-tools/sops
+      volumeMounts:
+        - name: custom-tools
+          mountPath: /custom-tools
+  extraContainers:
+    - name: sops-cmp
+      image: {{ argocd_cmp_image }}
+      command: ["/var/run/argocd/argocd-cmp-server"]
+      env:
+        - name: SOPS_AGE_KEY_FILE
+          value: /var/run/argocd/sops/key.txt
+        - name: PATH
+          value: /custom-tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      volumeMounts:
+        - name: var-files
+          mountPath: /var/run/argocd
+        - name: plugins
+          mountPath: /home/argocd/cmp-server/plugins
+        - name: cmp-plugin
+          mountPath: /home/argocd/cmp-server/config/plugin.yaml
+          subPath: sops.yaml
+        - name: custom-tools
+          mountPath: /custom-tools
+        - name: sops-age-key
+          mountPath: /var/run/argocd/sops
+          readOnly: true
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      namespace: argocd
+      labels:
+        prometheus: kube-prometheus
+
+applicationSet:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      namespace: argocd
+      labels:
+        prometheus: kube-prometheus

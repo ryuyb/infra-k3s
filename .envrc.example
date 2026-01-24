@@ -22,3 +22,15 @@ export POSTGRES_PASSWORD="postgres"
 
 # pgAdmin4
 export PGADMIN_EMAIL="admin@example.com"
+
+# ArgoCD OIDC Configuration
+# Set ARGOCD_OIDC_ENABLED=true to enable OIDC authentication
+export ARGOCD_OIDC_ENABLED="false"
+# OIDC Issuer URL (e.g., https://auth.example.com)
+export ARGOCD_OIDC_ISSUER_URL=""
+# OIDC Client ID (from ZITADEL)
+export ARGOCD_OIDC_CLIENT_ID=""
+# OIDC Client Secret (from ZITADEL)
+export ARGOCD_OIDC_CLIENT_SECRET=""
+# OIDC Logout URL
+export ARGOCD_OIDC_LOGOUT_URL="https://auth.example.com/oidc/v1/end_session"
