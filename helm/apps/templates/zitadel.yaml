@@ -55,12 +55,6 @@ spec:
                 LoginClient:
                   Machine:
                     Username: 'zitadel-machine-login-client'
-              PasswordComplexityPolicy:
-                MinLength: 8
-                HasLowercase: true
-                HasUppercase: false
-                HasNumber: true
-                HasSymbol: false
         login:
           service:
             appProtocol: http
@@ -105,6 +99,16 @@ spec:
               secretKeyRef:
                 name: zitadel-default-human
                 key: password
+          - name: ZITADEL_DEFAULTINSTANCE_PASSWORDCOMPLEXITYPOLICY_MINLENGTH
+            value: 8
+          - name: ZITADEL_DEFAULTINSTANCE_PASSWORDCOMPLEXITYPOLICY_HASLOWERCASE
+            value: true
+          - name: ZITADEL_DEFAULTINSTANCE_PASSWORDCOMPLEXITYPOLICY_HASUPPERCASE
+            value: false
+          - name: ZITADEL_DEFAULTINSTANCE_PASSWORDCOMPLEXITYPOLICY_HASNUMBER
+            value: true
+          - name: ZITADEL_DEFAULTINSTANCE_PASSWORDCOMPLEXITYPOLICY_HASSYMBOL
+            value: false
 
   destination:
     server: https://kubernetes.default.svc
