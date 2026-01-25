@@ -32,6 +32,7 @@ spec:
           skip-provider-button: true
           cookie-secure: true
           cookie-domain: ".{{ .Values.domain }}"
+          whitelist-domain: ".{{ .Values.domain }}"
           set-xauthrequest: true
           reverse-proxy: true
           silence-ping-logging: true
