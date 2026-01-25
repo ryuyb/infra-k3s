@@ -23,6 +23,7 @@ spec:
           provider-display-name: ZITADEL
           redirect-url: "https://oauth2-proxy.{{ .Values.domain }}/oauth2/callback"
           oidc-issuer-url: "https://zitadel.{{ .Values.domain }}"
+          code-challenge-method: "S256"
           email-domain: "*"
           pass-access-token: true
           pass-user-headers: true
