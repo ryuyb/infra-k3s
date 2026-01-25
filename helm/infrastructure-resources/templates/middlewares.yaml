@@ -165,11 +165,12 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   forwardAuth:
-    address: http://oauth2-proxy.apps.svc.cluster.local/oauth2/auth
+    address: http://oauth2-proxy.apps.svc.cluster.local/
     trustForwardHeader: true
     authResponseHeaders:
       - x-auth-request-access-token
       - x-auth-request-email
       - x-auth-request-preferred-username
       - x-auth-request-user
+      - Authorization
 {{- end }}
