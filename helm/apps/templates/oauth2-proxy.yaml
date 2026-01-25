@@ -73,4 +73,4 @@ spec:
             name: compress
       backendRefs:
         - name: oauth2-proxy
-          port: 8080
+          port: 80
