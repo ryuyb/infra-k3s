@@ -7,3 +7,5 @@ zitadel_default_org_id = ""
 zitadel_default_user_id = ""
 
 argocd_domain = ""
+
+oauth2_proxy_domain = ""

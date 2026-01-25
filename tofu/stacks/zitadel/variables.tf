@@ -1,25 +1,42 @@
 variable "zitadel_domain" {
-  type        = string                           # The type of the variable, in this case a string
-  description = "The domain of zitadel instance" # Description of what this variable represents
+  type        = string
+  description = "The domain of zitadel instance"
+  validation {
+    condition     = can(regex("^https://", var.zitadel_domain))
+    error_message = "ZITADEL domain must start with https://"
+  }
 }
 
 variable "zitadel_access_token" {
-  type = string
+  type        = string
+  description = "ZITADEL API access token"
+  sensitive   = true
 }
 
 variable "zitadel_default_org_id" {
   type        = string
-  description = "The org id"
+  description = "The default organization ID"
 }
 
 variable "zitadel_default_user_id" {
-  type = string
+  type        = string
+  description = "The default user ID for grants"
 }
 
 variable "argocd_domain" {
-  type = string
+  type        = string
+  description = "ArgoCD domain URL"
+  validation {
+    condition     = can(regex("^https://", var.argocd_domain))
+    error_message = "ArgoCD domain must start with https://"
+  }
 }
 
 variable "oauth2_proxy_domain" {
-  type = string
+  type        = string
+  description = "OAuth2 Proxy domain URL"
+  validation {
+    condition     = can(regex("^https://", var.oauth2_proxy_domain))
+    error_message = "OAuth2 Proxy domain must start with https://"
+  }
 }
