@@ -71,6 +71,11 @@ spec:
             group: traefik.io
             kind: Middleware
             name: compress
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: oauth2-proxy-headers
       backendRefs:
         - name: oauth2-proxy
           port: 80

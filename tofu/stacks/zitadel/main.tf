@@ -120,8 +120,8 @@ resource "zitadel_trigger_actions" "argocd_pre_access_token_creation" {
 resource "zitadel_project" "oauth2-proxy" {
   name                   = "oauth2-proxy"
   org_id                 = data.zitadel_org.default.id
-  project_role_assertion = true
-  project_role_check     = true
+  project_role_assertion = false
+  project_role_check     = false
 }
 
 resource "zitadel_application_oidc" "oauth2-proxy" {

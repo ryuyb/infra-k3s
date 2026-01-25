@@ -63,7 +63,7 @@ spec:
           extensionRef:
             group: traefik.io
             kind: Middleware
-            name: secure-auth-chain
+            name: oauth2-proxy-auth
       backendRefs:
         - name: kubewall
           port: 8443
