@@ -10,7 +10,7 @@ configs:
       url: {{ git_repo_url }}
       type: git
   cm:
-    url: https://argocd
+    url: https://argocd.{{ domain }}
 {% if argocd_oidc_enabled == 'true' %}
     admin.enabled: "false"
     oidc.config: |

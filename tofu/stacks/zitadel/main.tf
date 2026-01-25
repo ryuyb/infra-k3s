@@ -115,3 +115,27 @@ resource "zitadel_trigger_actions" "argocd_pre_access_token_creation" {
   trigger_type = "TRIGGER_TYPE_PRE_ACCESS_TOKEN_CREATION"
   action_ids   = [zitadel_action.argocd_groups_claim.id]
 }
+
+# oauth2 proxy
+resource "zitadel_project" "oauth2-proxy" {
+  name                   = "oauth2-proxy"
+  org_id                 = data.zitadel_org.default.id
+  project_role_assertion = true
+  project_role_check     = true
+}
+
+resource "zitadel_application_oidc" "oauth2-proxy" {
+  org_id     = data.zitadel_org.default.id
+  project_id = zitadel_project.oauth2-proxy.id
+
+  name                      = "oauth2-proxy"
+  app_type                  = "OIDC_APP_TYPE_WEB"
+  response_types            = ["OIDC_RESPONSE_TYPE_CODE"]
+  grant_types               = ["OIDC_GRANT_TYPE_AUTHORIZATION_CODE"]
+  auth_method_type          = "OIDC_AUTH_METHOD_TYPE_BASIC"
+  redirect_uris             = ["${var.oauth2_proxy_domain}/oauth2/callback"]
+
+  access_token_type           = "OIDC_TOKEN_TYPE_BEARER"
+  id_token_role_assertion     = true
+  id_token_userinfo_assertion = true
+}

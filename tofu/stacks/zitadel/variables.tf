@@ -19,3 +19,7 @@ variable "zitadel_default_user_id" {
 variable "argocd_domain" {
   type = string
 }
+
+variable "oauth2_proxy_domain" {
+  type = string
+}
