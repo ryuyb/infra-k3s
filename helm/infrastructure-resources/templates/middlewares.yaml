@@ -167,4 +167,9 @@ spec:
   forwardAuth:
     address: http://oauth2-proxy.apps.svc.cluster.local/oauth2/auth
     trustForwardHeader: true
+    authResponseHeaders:
+      - x-auth-request-access-token
+      - x-auth-request-email
+      - x-auth-request-preferred-username
+      - x-auth-request-user
 {{- end }}

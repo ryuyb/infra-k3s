@@ -25,11 +25,13 @@ spec:
           oidc-issuer-url: "https://zitadel.{{ .Values.domain }}"
           code-challenge-method: "S256"
           email-domain: "*"
+          upstream: "static://200"
           pass-access-token: true
           pass-user-headers: true
           pass-authorization-header: true
           skip-provider-button: true
           cookie-secure: true
+          cookie-domain: ".{{ .Values.domain }}"
           set-xauthrequest: true
           reverse-proxy: true
           silence-ping-logging: true
