@@ -57,6 +57,19 @@ spec:
     - matches:
         - path:
             type: PathPrefix
+            value: /oauth2
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: oauth2-proxy-headers
+      backendRefs:
+        - name: oauth2-proxy
+          port: 80
+    - matches:
+        - path:
+            type: PathPrefix
             value: /
       filters:
         - type: ExtensionRef
