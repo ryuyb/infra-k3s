@@ -26,6 +26,22 @@ spec:
 
         image:
           tag: "{{ .Values.vaultwarden.imageTag }}"
+          extraVarsSecret: "vaultwarden-extra-vars"
+          extraVars:
+            - key: SSO_ENABLED
+              value: false
+            - key: SSO_ONLY
+              value: false
+            - key: SSO_SIGNUPS_MATCH_EMAIL
+              value: true
+            - key: SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION
+              value: false
+            - key: SSO_AUTHORITY
+              value: "https://zitadel.{{ .Values.domain }}"
+            - key: SSO_SCOPES
+              value: "email profile offline_access"
+            - key: SSO_AUDIENCE_TRUSTED
+              value: '^\d{18}$'
 
         database:
           type: postgresql

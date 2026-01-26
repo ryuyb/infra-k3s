@@ -41,7 +41,7 @@ spec:
               Org:
                 Name: ZITADEL
                 Human:
-                  UserName: admin
+                  UserName: admin@{{ .Values.domain }}
                   FirstName: ZITADEL
                   LastName: Admin
                   Email:
