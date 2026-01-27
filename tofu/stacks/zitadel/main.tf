@@ -102,3 +102,30 @@ module "oauth2_proxy_oidc" {
   project_id   = module.oauth2_proxy_project.project_id
   redirect_uris = ["${var.oauth2_proxy_domain}/oauth2/callback"]
 }
+
+# ============================================================================
+# Apps Project
+# ============================================================================
+
+module "apps_project" {
+  source = "../../modules/zitadel-project"
+
+  name                   = "apps"
+  org_id                 = data.zitadel_org.default.id
+  project_role_assertion = false
+  project_role_check     = false
+}
+
+# ============================================================================
+# VaultWarden
+# ============================================================================
+
+module "vaultwarden_oidc" {
+  source = "../../modules/zitadel-oidc-app"
+
+  name         = "Vaultwarden"
+  org_id       = data.zitadel_org.default.id
+  project_id   = module.apps_project.project_id
+  grant_types  = ["OIDC_GRANT_TYPE_AUTHORIZATION_CODE", "OIDC_GRANT_TYPE_REFRESH_TOKEN"]
+  redirect_uris = ["${var.vaultwarden_domain}/identity/connect/oidc-signin"]
+}

@@ -40,3 +40,12 @@ variable "oauth2_proxy_domain" {
     error_message = "OAuth2 Proxy domain must start with https://"
   }
 }
+
+variable "vaultwarden_domain" {
+  type        = string
+  description = "Vaultwarden domain URL"
+  validation {
+    condition     = can(regex("^https://", var.vaultwarden_domain))
+    error_message = "Vaultwarden domain must start with https://"
+  }
+}
