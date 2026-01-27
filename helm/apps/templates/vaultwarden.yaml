@@ -29,7 +29,7 @@ spec:
           extraVarsSecret: "vaultwarden-extra-vars"
           extraVars:
             - key: SSO_ENABLED
-              value: false
+              value: true
             - key: SSO_ONLY
               value: false
             - key: SSO_SIGNUPS_MATCH_EMAIL
